@@ -1,0 +1,24 @@
+[gd_scene format=3 uid="uid://eb0m58xq5pld"]
+
+[ext_resource type="Script" uid="uid://vsoj8x5p1siv" path="res://Lane.gd" id="1_ey8ml"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ey8ml"]
+size = Vector2(40, 40)
+
+[node name="Lane" type="PanelContainer" unique_id=1356598570]
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_ey8ml")
+
+[node name="DropZone" type="Area2D" parent="." unique_id=1523745668]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DropZone" unique_id=415735990]
+position = Vector2(20, 20)
+shape = SubResource("RectangleShape2D_ey8ml")
+
+[node name="CardPos" type="Marker2D" parent="DropZone" unique_id=1179555400]
+position = Vector2(9, 7)
+
+[node name="PlacementPos" type="Marker2D" parent="." unique_id=1429213406]
+
+[node name="VFXSpawner" type="Node2D" parent="." unique_id=1487478817]

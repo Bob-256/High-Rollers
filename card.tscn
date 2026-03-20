@@ -1,0 +1,43 @@
+[gd_scene format=3 uid="uid://ctwi2jy7qn00w"]
+
+[ext_resource type="Script" uid="uid://dip5ppkgtrp3t" path="res://card_base.gd" id="1_kikvd"]
+
+[node name="Card" type="Node2D" unique_id=1226608037]
+script = ExtResource("1_kikvd")
+
+[node name="Art" type="Sprite2D" parent="." unique_id=1816162589]
+
+[node name="Background" type="Panel" parent="." unique_id=865903103]
+offset_right = 40.0
+offset_bottom = 40.0
+mouse_filter = 2
+
+[node name="CardArt" type="TextureRect" parent="." unique_id=1455535551]
+offset_right = 40.0
+offset_bottom = 40.0
+mouse_filter = 2
+
+[node name="StatLayout" type="Control" parent="." unique_id=315260125]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Energy Cost" type="Label" parent="StatLayout" unique_id=1702287629]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="Health" type="Label" parent="StatLayout" unique_id=1028591691]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="Attack" type="Label" parent="StatLayout" unique_id=485440742]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="AbilityLabel" type="Label" parent="." unique_id=73802764]
+offset_right = 40.0
+offset_bottom = 23.0

@@ -1,0 +1,339 @@
+
+==================================================
+FILE: .\card.tscn
+==================================================
+
+[gd_scene format=3 uid="uid://ctwi2jy7qn00w"]
+
+[ext_resource type="Script" uid="uid://dip5ppkgtrp3t" path="res://card_base.gd" id="1_kikvd"]
+
+[node name="Card" type="Node2D" unique_id=1226608037]
+script = ExtResource("1_kikvd")
+
+[node name="Art" type="Sprite2D" parent="." unique_id=1816162589]
+
+[node name="Background" type="Panel" parent="." unique_id=865903103]
+offset_right = 40.0
+offset_bottom = 40.0
+mouse_filter = 2
+
+[node name="CardArt" type="TextureRect" parent="." unique_id=1455535551]
+offset_right = 40.0
+offset_bottom = 40.0
+mouse_filter = 2
+
+[node name="StatLayout" type="Control" parent="." unique_id=315260125]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Energy Cost" type="Label" parent="StatLayout" unique_id=1702287629]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="Health" type="Label" parent="StatLayout" unique_id=1028591691]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="Attack" type="Label" parent="StatLayout" unique_id=485440742]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="AbilityLabel" type="Label" parent="." unique_id=73802764]
+offset_right = 40.0
+offset_bottom = 23.0
+
+
+
+==================================================
+FILE: .\CardData.gd
+==================================================
+
+extends Resource
+class_name CardData
+
+@export var card_name: String
+@export var energy_cost: int
+@export var attack: int
+@export var health: int
+@export var ability_text: String
+@export var card_art: Texture2D
+
+
+
+==================================================
+FILE: .\card_base.gd
+==================================================
+
+extends Node2D
+
+@export var data: CardData
+var dragging = false
+var original_position: Vector2
+
+# Connect these to the unique IDs in your Card.tscn 
+@onready var cost_label = $"StatLayout/Energy Cost"
+@onready var health_label = $StatLayout/Health
+@onready var attack_label = $StatLayout/Attack
+@onready var ability_label = $AbilityLabel
+
+func setup_card(card_data: CardData):
+	data = card_data
+	cost_label.text = str(data.energy_cost)
+	attack_label.text = str(data.attack)
+	health_label.text = str(data.health)
+	ability_label.text = data.ability_text
+
+func _input(event):
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed and get_viewport().get_mouse_position().distance_to(global_position) < 50:
+			dragging = true
+			original_position = global_position
+		elif dragging:
+			dragging = false
+			check_drop()
+
+func _process(_delta):
+	if dragging:
+		global_position = get_global_mouse_position()
+
+func check_drop():
+	# Get the direct space state for 2D physics querying
+	var space_state = get_world_2d().direct_space_state
+	var parameters = PhysicsPointQueryParameters2D.new()
+	parameters.position = get_global_mouse_position()
+	parameters.collide_with_areas = true # Detect the DropZone Area2D
+	
+	var results = space_state.intersect_point(parameters)
+	
+	for result in results:
+		var lane = result.collider.get_parent() # Area2D is a child of Lane
+		if lane.has_method("receive_card") and lane.is_empty():
+			# Check if player has enough energy from GameManager
+			var gm = get_tree().root.get_node("Main") 
+			if gm.player_energy >= data.energy_cost:
+				if lane.receive_card(self):
+					gm.player_energy -= data.energy_cost
+					gm.update_ui()
+					dragging = false
+					set_process(false) # Stop dragging logic once played
+					return
+
+	# If no valid lane or not enough energy, snap back 
+	global_position = original_position
+
+
+
+==================================================
+FILE: .\DeckManager.gd
+==================================================
+
+extends Node
+
+# Reference to the Card scene to instantiate visuals
+@export var card_scene: PackedScene
+# List of CardData resources (Dealer, Slot Guard, etc.)
+@export var starter_deck: Array[CardData] 
+
+var draw_pile: Array[CardData] = []
+var discard_pile: Array[CardData] = []
+var hand: Array[CardData] = []
+
+func _ready():
+	# Initialize the game with the 10-card starter deck
+	prepare_deck()
+
+func prepare_deck():
+	draw_pile = starter_deck.duplicate()
+	draw_pile.shuffle() # Shuffling ensures low-randomness strategy starts fresh
+
+func draw_card(hand_container: Control):
+	if draw_pile.is_empty():
+		if discard_pile.is_empty():
+			print("No cards left to draw!")
+			return
+		reshuffle_discard_into_draw()
+
+	var card_data = draw_pile.pop_front()
+	hand.append(card_data)
+	
+	# Instantiate the visual card in the PlayerHand UI
+	var new_card = card_scene.instantiate()
+	hand_container.add_child(new_card)
+	new_card.setup_card(card_data) # Pass the Energy, Atk, and HP stats
+	
+	print("Drew: ", card_data.card_name)
+
+func reshuffle_discard_into_draw():
+	draw_pile = discard_pile.duplicate()
+	discard_pile.clear()
+	draw_pile.shuffle()
+
+func discard_card(card_data: CardData):
+	hand.erase(card_data)
+	discard_pile.append(card_data)
+
+
+
+==================================================
+FILE: .\GameManager.gd
+==================================================
+
+extends Node2D
+@onready var deck_manager = $DeckManager
+var current_turn: int = 1
+var player_energy: int = 1
+var player_score: int = 0
+const MAX_ENERGY = 6
+const WIN_SCORE = 10
+
+func _ready():
+	start_player_turn()
+
+func end_turn():
+	# Logic for units to attack forward would go here
+	current_turn += 1
+	start_player_turn()
+
+func add_score(amount: int):
+	player_score += amount
+	if player_score >= WIN_SCORE:
+		print("Victory!") # Trigger "Flashy effects" here
+	update_ui()
+
+func update_ui():
+	$UI/EnergyDisplay.text = "Energy: " + str(player_energy)
+	$UI/ProgressBar.value = player_score # Tracks 0-10 win condition
+
+func start_player_turn():
+	player_energy = min(current_turn, MAX_ENERGY)
+	# Draw until hand is full or deck empty [cite: 5]
+	deck_manager.draw_card($UI/PlayerHand)
+	update_ui()
+
+
+
+==================================================
+FILE: .\Lane.gd
+==================================================
+
+extends Panel
+
+var occupied_card = null
+
+# Ensure this function is exactly as written here
+func is_empty() -> bool:
+	return occupied_card == null
+
+func receive_card(card_node):
+	if is_empty():
+		occupied_card = card_node
+		# Use the Marker2D you created in Lane.tscn 
+		card_node.global_position = $DropZone/CardPos.global_position
+		return true
+	return false
+
+
+
+==================================================
+FILE: .\Lane.tscn
+==================================================
+
+[gd_scene format=3 uid="uid://eb0m58xq5pld"]
+
+[ext_resource type="Script" uid="uid://vsoj8x5p1siv" path="res://Lane.gd" id="1_ey8ml"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ey8ml"]
+size = Vector2(40, 40)
+
+[node name="Lane" type="PanelContainer" unique_id=1356598570]
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_ey8ml")
+
+[node name="DropZone" type="Area2D" parent="." unique_id=1523745668]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DropZone" unique_id=415735990]
+position = Vector2(20, 20)
+shape = SubResource("RectangleShape2D_ey8ml")
+
+[node name="CardPos" type="Marker2D" parent="DropZone" unique_id=1179555400]
+position = Vector2(9, 7)
+
+[node name="PlacementPos" type="Marker2D" parent="." unique_id=1429213406]
+
+[node name="VFXSpawner" type="Node2D" parent="." unique_id=1487478817]
+
+
+
+==================================================
+FILE: .\main.tscn
+==================================================
+
+[gd_scene format=3 uid="uid://dfp7koqrlomwa"]
+
+[ext_resource type="Script" uid="uid://rjq4anmwluic" path="res://GameManager.gd" id="1_0xm2m"]
+[ext_resource type="PackedScene" uid="uid://eb0m58xq5pld" path="res://Lane.tscn" id="2_h2yge"]
+[ext_resource type="Script" uid="uid://c5sphsqjmsgpv" path="res://DeckManager.gd" id="3_vivmo"]
+[ext_resource type="PackedScene" uid="uid://ctwi2jy7qn00w" path="res://card.tscn" id="4_2cqfq"]
+[ext_resource type="Script" uid="uid://dip5ppkgtrp3t" path="res://card_base.gd" id="5_yaehf"]
+[ext_resource type="Resource" uid="uid://dppwihnx0yqv6" path="res://SlotGaurd1.tres" id="6_074og"]
+[ext_resource type="Resource" uid="uid://dkgkyc5sxffc4" path="res://SlotGaurd2.tres" id="7_cegan"]
+[ext_resource type="Resource" uid="uid://cav8owd2d4y04" path="res://SlotGaurd3.tres" id="8_82xsv"]
+[ext_resource type="Resource" uid="uid://dr6fahyfvhbkn" path="res://SlotGaurd4.tres" id="9_getpj"]
+[ext_resource type="Resource" uid="uid://bvfr45d2m4tic" path="res://CardShark1.tres" id="10_ryguw"]
+[ext_resource type="Resource" uid="uid://b82w57swlibfr" path="res://CardShark2.tres" id="11_d13ii"]
+[ext_resource type="Resource" uid="uid://bf64ocpv17lwo" path="res://Dealer1.tres" id="12_1u8w0"]
+[ext_resource type="Resource" uid="uid://dom65fo5m7q2v" path="res://Dealer2.tres" id="13_0odxb"]
+[ext_resource type="Resource" uid="uid://dk8vvl0nvdcck" path="res://Dealer3.tres" id="14_lswn8"]
+[ext_resource type="Resource" uid="uid://b77nyoao2c7nn" path="res://Dealer4.tres" id="15_a6jrf"]
+
+[node name="Main" type="Node2D" unique_id=1345614435]
+script = ExtResource("1_0xm2m")
+
+[node name="Background" type="Sprite2D" parent="." unique_id=2074976595]
+
+[node name="Board" type="HBoxContainer" parent="." unique_id=966255795]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Lane1" parent="Board" unique_id=1356598570 instance=ExtResource("2_h2yge")]
+layout_mode = 2
+
+[node name="Lane2" parent="Board" unique_id=1334266369 instance=ExtResource("2_h2yge")]
+layout_mode = 2
+
+[node name="Lane3" parent="Board" unique_id=38981547 instance=ExtResource("2_h2yge")]
+layout_mode = 2
+
+[node name="Lane4" parent="Board" unique_id=1305176684 instance=ExtResource("2_h2yge")]
+layout_mode = 2
+
+[node name="UI" type="CanvasLayer" parent="." unique_id=90600976]
+
+[node name="ProgressBar" type="ProgressBar" parent="UI" unique_id=759979735]
+offset_right = 4.0
+offset_bottom = 27.0
+
+[node name="EnergyDisplay" type="Label" parent="UI" unique_id=478258773]
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="EndTurnButton" type="Button" parent="UI" unique_id=1050647512]
+offset_right = 8.0
+offset_bottom = 8.0
+
+[node name="PlayerHand" type="HBoxContainer" parent="UI" unique_id=154813626]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="DeckManager" type="Node" parent="." unique_id=1990857804]
+script = ExtResource("3_vivmo")
+card_scene = ExtResource("4_2cqfq")
+starter_deck = Array[ExtResource("5_yaehf")]([ExtResource("10_ryguw"), ExtResource("11_d13ii"), ExtResource("12_1u8w0"), ExtResource("13_0odxb"), ExtResource("14_lswn8"), ExtResource("15_a6jrf"), ExtResource("6_074og"), ExtResource("7_cegan"), ExtResource("8_82xsv"), ExtResource("9_getpj")])
+
+
