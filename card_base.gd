@@ -1,4 +1,4 @@
-extends Node2D
+extends PanelContainer
 
 @export var data: CardData
 var dragging = false
@@ -16,14 +16,22 @@ func setup_card(card_data: CardData):
 	attack_label.text = str(data.attack)
 	health_label.text = str(data.health)
 	ability_label.text = data.ability_text
+	
+	# NEW LINE: This tells the visual card to show the art you just assigned
+	$CardArt.texture = data.card_art
 
+# Update this part in card_base.gd
 func _input(event):
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-		if event.pressed and get_viewport().get_mouse_position().distance_to(global_position) < 50:
-			dragging = true
-			original_position = global_position
+		if event.pressed:
+			# Use get_rect() to check if the click is anywhere inside the card
+			if get_rect().has_point(get_global_mouse_position()):
+				dragging = true
+				original_position = global_position
+				z_index = 10 
 		elif dragging:
 			dragging = false
+			z_index = 0
 			check_drop()
 
 func _process(_delta):

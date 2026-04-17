@@ -7,26 +7,25 @@ FILE: .\card.tscn
 
 [ext_resource type="Script" uid="uid://dip5ppkgtrp3t" path="res://card_base.gd" id="1_kikvd"]
 
-[node name="Card" type="Node2D" unique_id=1226608037]
+[node name="Card" type="PanelContainer" unique_id=1339370288]
+offset_right = 23.0
+offset_bottom = 28.0
 script = ExtResource("1_kikvd")
 
 [node name="Art" type="Sprite2D" parent="." unique_id=1816162589]
 
 [node name="Background" type="Panel" parent="." unique_id=865903103]
-offset_right = 40.0
-offset_bottom = 40.0
+layout_mode = 2
 mouse_filter = 2
 
 [node name="CardArt" type="TextureRect" parent="." unique_id=1455535551]
-offset_right = 40.0
-offset_bottom = 40.0
+layout_mode = 2
 mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
 
 [node name="StatLayout" type="Control" parent="." unique_id=315260125]
-layout_mode = 3
-anchors_preset = 0
-offset_right = 40.0
-offset_bottom = 40.0
+layout_mode = 2
 
 [node name="Energy Cost" type="Label" parent="StatLayout" unique_id=1702287629]
 layout_mode = 0
@@ -44,8 +43,7 @@ offset_right = 40.0
 offset_bottom = 23.0
 
 [node name="AbilityLabel" type="Label" parent="." unique_id=73802764]
-offset_right = 40.0
-offset_bottom = 23.0
+layout_mode = 2
 
 
 
@@ -69,7 +67,7 @@ class_name CardData
 FILE: .\card_base.gd
 ==================================================
 
-extends Node2D
+extends PanelContainer
 
 @export var data: CardData
 var dragging = false
@@ -87,14 +85,23 @@ func setup_card(card_data: CardData):
 	attack_label.text = str(data.attack)
 	health_label.text = str(data.health)
 	ability_label.text = data.ability_text
+	
+	# NEW LINE: This tells the visual card to show the art you just assigned
+	$CardArt.texture = data.card_art
 
 func _input(event):
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-		if event.pressed and get_viewport().get_mouse_position().distance_to(global_position) < 50:
-			dragging = true
-			original_position = global_position
+		if event.pressed:
+			# Check if mouse is inside the 40x40 card area
+			var mouse_pos = get_local_mouse_position()
+			if mouse_pos.x >= 0 and mouse_pos.x <= 40 and mouse_pos.y >= 0 and mouse_pos.y <= 40:
+				dragging = true
+				original_position = global_position
+				# Ensure the card appears on top of others while dragging
+				z_index = 10 
 		elif dragging:
 			dragging = false
+			z_index = 0
 			check_drop()
 
 func _process(_delta):
@@ -195,9 +202,28 @@ func _ready():
 	start_player_turn()
 
 func end_turn():
-	# Logic for units to attack forward would go here
+	resolve_combat()
 	current_turn += 1
 	start_player_turn()
+
+func resolve_combat():
+	# Reference your Board's lanes from the HBoxContainer 
+	var lanes = $Board.get_children()
+	
+	for lane in lanes:
+		if !lane.is_empty():
+			var damage = lane.get_card_attack()
+			# Inside the loop after add_score(damage)
+			var vfx = lane.get_node("VFXSpawner")
+			# Simple visual feedback: Shake the lane slightly
+			var tween = create_tween()
+			tween.tween_property(lane, "position:y", lane.position.y - 10, 0.1)
+			tween.tween_property(lane, "position:y", lane.position.y, 0.1)
+			# Check Opponent (For the prototype, we'll assume direct damage to score)
+			# In a full game, you'd check the opponent's matching lane here
+			print("Lane attacks for: ", damage)
+			add_score(damage) # Directly adds to the 0-10 Score Meter
+			
 
 func add_score(amount: int):
 	player_score += amount
@@ -211,8 +237,9 @@ func update_ui():
 
 func start_player_turn():
 	player_energy = min(current_turn, MAX_ENERGY)
-	# Draw until hand is full or deck empty [cite: 5]
-	deck_manager.draw_card($UI/PlayerHand)
+	# Loop to draw until the player has a full hand (e.g., 5 cards)
+	while deck_manager.hand.size() < 5:
+		deck_manager.draw_card($UI/PlayerHand)
 	update_ui()
 
 
@@ -221,7 +248,7 @@ func start_player_turn():
 FILE: .\Lane.gd
 ==================================================
 
-extends Panel
+extends PanelContainer
 
 var occupied_card = null
 
@@ -236,6 +263,22 @@ func receive_card(card_node):
 		card_node.global_position = $DropZone/CardPos.global_position
 		return true
 	return false
+# Add this to Lane.gd
+func get_card_attack() -> int:
+	if occupied_card and occupied_card.data:
+		return occupied_card.data.attack
+	return 0
+
+func take_damage(amount: int):
+	if occupied_card:
+		occupied_card.data.health -= amount
+		# Update the visual label on the card [cite: 5]
+		occupied_card.setup_card(occupied_card.data) 
+		
+		if occupied_card.data.health <= 0:
+			print("Card defeated!")
+			occupied_card.queue_free() # Remove from screen
+			occupied_card = null
 
 
 
@@ -280,7 +323,7 @@ FILE: .\main.tscn
 [ext_resource type="PackedScene" uid="uid://eb0m58xq5pld" path="res://Lane.tscn" id="2_h2yge"]
 [ext_resource type="Script" uid="uid://c5sphsqjmsgpv" path="res://DeckManager.gd" id="3_vivmo"]
 [ext_resource type="PackedScene" uid="uid://ctwi2jy7qn00w" path="res://card.tscn" id="4_2cqfq"]
-[ext_resource type="Script" uid="uid://dip5ppkgtrp3t" path="res://card_base.gd" id="5_yaehf"]
+[ext_resource type="Script" uid="uid://46n8evt5up56" path="res://CardData.gd" id="5_lquwl"]
 [ext_resource type="Resource" uid="uid://dppwihnx0yqv6" path="res://SlotGaurd1.tres" id="6_074og"]
 [ext_resource type="Resource" uid="uid://dkgkyc5sxffc4" path="res://SlotGaurd2.tres" id="7_cegan"]
 [ext_resource type="Resource" uid="uid://cav8owd2d4y04" path="res://SlotGaurd3.tres" id="8_82xsv"]
@@ -328,12 +371,15 @@ offset_right = 8.0
 offset_bottom = 8.0
 
 [node name="PlayerHand" type="HBoxContainer" parent="UI" unique_id=154813626]
-offset_right = 40.0
-offset_bottom = 40.0
+offset_right = 500.0
+offset_bottom = 100.0
+scale = Vector2(5, 5)
 
 [node name="DeckManager" type="Node" parent="." unique_id=1990857804]
 script = ExtResource("3_vivmo")
 card_scene = ExtResource("4_2cqfq")
-starter_deck = Array[ExtResource("5_yaehf")]([ExtResource("10_ryguw"), ExtResource("11_d13ii"), ExtResource("12_1u8w0"), ExtResource("13_0odxb"), ExtResource("14_lswn8"), ExtResource("15_a6jrf"), ExtResource("6_074og"), ExtResource("7_cegan"), ExtResource("8_82xsv"), ExtResource("9_getpj")])
+starter_deck = Array[ExtResource("5_lquwl")]([ExtResource("10_ryguw"), ExtResource("11_d13ii"), ExtResource("12_1u8w0"), ExtResource("13_0odxb"), ExtResource("14_lswn8"), ExtResource("15_a6jrf"), ExtResource("6_074og"), ExtResource("7_cegan"), ExtResource("8_82xsv"), ExtResource("9_getpj")])
+
+[connection signal="pressed" from="UI/EndTurnButton" to="." method="end_turn"]
 
 

@@ -10,9 +10,28 @@ func _ready():
 	start_player_turn()
 
 func end_turn():
-	# Logic for units to attack forward would go here
+	resolve_combat()
 	current_turn += 1
 	start_player_turn()
+
+func resolve_combat():
+	# Reference your Board's lanes from the HBoxContainer 
+	var lanes = $Board.get_children()
+	
+	for lane in lanes:
+		if !lane.is_empty():
+			var damage = lane.get_card_attack()
+			# Inside the loop after add_score(damage)
+			var vfx = lane.get_node("VFXSpawner")
+			# Simple visual feedback: Shake the lane slightly
+			var tween = create_tween()
+			tween.tween_property(lane, "position:y", lane.position.y - 10, 0.1)
+			tween.tween_property(lane, "position:y", lane.position.y, 0.1)
+			# Check Opponent (For the prototype, we'll assume direct damage to score)
+			# In a full game, you'd check the opponent's matching lane here
+			print("Lane attacks for: ", damage)
+			add_score(damage) # Directly adds to the 0-10 Score Meter
+			
 
 func add_score(amount: int):
 	player_score += amount
@@ -26,6 +45,7 @@ func update_ui():
 
 func start_player_turn():
 	player_energy = min(current_turn, MAX_ENERGY)
-	# Draw until hand is full or deck empty [cite: 5]
-	deck_manager.draw_card($UI/PlayerHand)
+	# Loop to draw until the player has a full hand (e.g., 5 cards)
+	while deck_manager.hand.size() < 5:
+		deck_manager.draw_card($UI/PlayerHand)
 	update_ui()
