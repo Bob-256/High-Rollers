@@ -8,6 +8,7 @@ FILE: .\card.tscn
 [ext_resource type="Script" uid="uid://dip5ppkgtrp3t" path="res://card_base.gd" id="1_kikvd"]
 
 [node name="Card" type="PanelContainer" unique_id=1339370288]
+custom_minimum_size = Vector2(200, 100)
 offset_right = 23.0
 offset_bottom = 28.0
 script = ExtResource("1_kikvd")
@@ -24,23 +25,17 @@ mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="StatLayout" type="Control" parent="." unique_id=315260125]
+[node name="StatLayout" type="VBoxContainer" parent="." unique_id=2090612591]
 layout_mode = 2
 
 [node name="Energy Cost" type="Label" parent="StatLayout" unique_id=1702287629]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 23.0
+layout_mode = 2
 
 [node name="Health" type="Label" parent="StatLayout" unique_id=1028591691]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 23.0
+layout_mode = 2
 
 [node name="Attack" type="Label" parent="StatLayout" unique_id=485440742]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 23.0
+layout_mode = 2
 
 [node name="AbilityLabel" type="Label" parent="." unique_id=73802764]
 layout_mode = 2
@@ -72,6 +67,28 @@ extends PanelContainer
 @export var data: CardData
 var dragging = false
 var original_position: Vector2
+# Add these variables to the top of card_base.gd
+var hover_scale := Vector2(1.1, 1.1)
+var default_scale := Vector2(1.0, 1.0)
+
+func _ready():
+	# Connect the mouse signals to these functions
+	mouse_entered.connect(_on_mouse_entered)
+	mouse_exited.connect(_on_mouse_exited)
+
+func _on_mouse_entered():
+	if not dragging:
+		# Create a smooth scaling animation
+		var tween = create_tween()
+		tween.tween_property(self, "scale", hover_scale, 0.1).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		z_index = 5 # Ensure the hovered card is drawn on top of others
+
+func _on_mouse_exited():
+	if not dragging:
+		# Smoothly return to original size
+		var tween = create_tween()
+		tween.tween_property(self, "scale", default_scale, 0.1).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		z_index = 0 # Return to normal layer
 
 # Connect these to the unique IDs in your Card.tscn 
 @onready var cost_label = $"StatLayout/Energy Cost"
@@ -89,15 +106,14 @@ func setup_card(card_data: CardData):
 	# NEW LINE: This tells the visual card to show the art you just assigned
 	$CardArt.texture = data.card_art
 
+# Update this part in card_base.gd
 func _input(event):
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
-			# Check if mouse is inside the 40x40 card area
-			var mouse_pos = get_local_mouse_position()
-			if mouse_pos.x >= 0 and mouse_pos.x <= 40 and mouse_pos.y >= 0 and mouse_pos.y <= 40:
+			# Use get_rect() to check if the click is anywhere inside the card
+			if get_rect().has_point(get_global_mouse_position()):
 				dragging = true
 				original_position = global_position
-				# Ensure the card appears on top of others while dragging
 				z_index = 10 
 		elif dragging:
 			dragging = false
@@ -294,8 +310,10 @@ FILE: .\Lane.tscn
 size = Vector2(40, 40)
 
 [node name="Lane" type="PanelContainer" unique_id=1356598570]
+custom_minimum_size = Vector2(200, 100)
 offset_right = 40.0
 offset_bottom = 40.0
+size_flags_vertical = 0
 script = ExtResource("1_ey8ml")
 
 [node name="DropZone" type="Area2D" parent="." unique_id=1523745668]
@@ -341,8 +359,10 @@ script = ExtResource("1_0xm2m")
 [node name="Background" type="Sprite2D" parent="." unique_id=2074976595]
 
 [node name="Board" type="HBoxContainer" parent="." unique_id=966255795]
-offset_right = 40.0
-offset_bottom = 40.0
+offset_left = 2.86
+offset_top = 300.0
+offset_right = 814.86
+offset_bottom = 400.0
 
 [node name="Lane1" parent="Board" unique_id=1356598570 instance=ExtResource("2_h2yge")]
 layout_mode = 2
@@ -371,9 +391,8 @@ offset_right = 8.0
 offset_bottom = 8.0
 
 [node name="PlayerHand" type="HBoxContainer" parent="UI" unique_id=154813626]
-offset_right = 500.0
-offset_bottom = 100.0
-scale = Vector2(5, 5)
+offset_right = 800.0
+offset_bottom = 1000.0
 
 [node name="DeckManager" type="Node" parent="." unique_id=1990857804]
 script = ExtResource("3_vivmo")

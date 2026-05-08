@@ -3,9 +3,10 @@
 [ext_resource type="Script" uid="uid://dip5ppkgtrp3t" path="res://card_base.gd" id="1_kikvd"]
 
 [node name="Card" type="PanelContainer" unique_id=1339370288]
-custom_minimum_size = Vector2(120, 170)
+custom_minimum_size = Vector2(200, 100)
 offset_right = 23.0
 offset_bottom = 28.0
+size_flags_vertical = 4
 script = ExtResource("1_kikvd")
 
 [node name="Art" type="Sprite2D" parent="." unique_id=1816162589]

@@ -9,15 +9,16 @@ func is_empty() -> bool:
 func receive_card(card_node):
 	if is_empty():
 		occupied_card = card_node
-		# Use the Marker2D you created in Lane.tscn 
-		card_node.global_position = $DropZone/CardPos.global_position
+		
+		# FIX: Move the card from the Hand to the Lane in the node tree
+		card_node.get_parent().remove_child(card_node)
+		add_child(card_node)
+		
+		# Now that it's a child of the Lane (a PanelContainer), 
+		# it will automatically center itself!
+		card_node.position = Vector2.ZERO 
 		return true
 	return false
-# Add this to Lane.gd
-func get_card_attack() -> int:
-	if occupied_card and occupied_card.data:
-		return occupied_card.data.attack
-	return 0
 
 func take_damage(amount: int):
 	if occupied_card:

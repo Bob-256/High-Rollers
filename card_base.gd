@@ -3,6 +3,28 @@ extends PanelContainer
 @export var data: CardData
 var dragging = false
 var original_position: Vector2
+# Add these variables to the top of card_base.gd
+var hover_scale := Vector2(1.1, 1.1)
+var default_scale := Vector2(1.0, 1.0)
+
+func _ready():
+	# Connect the mouse signals to these functions
+	mouse_entered.connect(_on_mouse_entered)
+	mouse_exited.connect(_on_mouse_exited)
+
+func _on_mouse_entered():
+	if not dragging:
+		# Create a smooth scaling animation
+		var tween = create_tween()
+		tween.tween_property(self, "scale", hover_scale, 0.1).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		z_index = 5 # Ensure the hovered card is drawn on top of others
+
+func _on_mouse_exited():
+	if not dragging:
+		# Smoothly return to original size
+		var tween = create_tween()
+		tween.tween_property(self, "scale", default_scale, 0.1).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		z_index = 0 # Return to normal layer
 
 # Connect these to the unique IDs in your Card.tscn 
 @onready var cost_label = $"StatLayout/Energy Cost"
@@ -21,14 +43,14 @@ func setup_card(card_data: CardData):
 	$CardArt.texture = data.card_art
 
 # Update this part in card_base.gd
-func _input(event):
+# Replace your old _input(event) with this:
+func _gui_input(event):
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
-			# Use get_rect() to check if the click is anywhere inside the card
-			if get_rect().has_point(get_global_mouse_position()):
-				dragging = true
-				original_position = global_position
-				z_index = 10 
+			# Godot already knows the mouse is over the card here!
+			dragging = true
+			original_position = global_position
+			z_index = 10 
 		elif dragging:
 			dragging = false
 			z_index = 0
@@ -46,6 +68,11 @@ func check_drop():
 	parameters.collide_with_areas = true # Detect the DropZone Area2D
 	
 	var results = space_state.intersect_point(parameters)
+	# If no valid lane or not enough energy, snap back 
+	dragging = false
+	# Instead of setting global_position, we just let the 
+	# HBoxContainer reposition it naturally.
+	position = Vector2.ZERO
 	
 	for result in results:
 		var lane = result.collider.get_parent() # Area2D is a child of Lane
