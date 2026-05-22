@@ -1,65 +1,6 @@
 
 ==================================================
-FILE: .\card.tscn
-==================================================
-
-[gd_scene format=3 uid="uid://ctwi2jy7qn00w"]
-
-[ext_resource type="Script" uid="uid://dip5ppkgtrp3t" path="res://card_base.gd" id="1_kikvd"]
-
-[node name="Card" type="PanelContainer" unique_id=1339370288]
-custom_minimum_size = Vector2(200, 100)
-offset_right = 23.0
-offset_bottom = 28.0
-script = ExtResource("1_kikvd")
-
-[node name="Art" type="Sprite2D" parent="." unique_id=1816162589]
-
-[node name="Background" type="Panel" parent="." unique_id=865903103]
-layout_mode = 2
-mouse_filter = 2
-
-[node name="CardArt" type="TextureRect" parent="." unique_id=1455535551]
-layout_mode = 2
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 5
-
-[node name="StatLayout" type="VBoxContainer" parent="." unique_id=2090612591]
-layout_mode = 2
-
-[node name="Energy Cost" type="Label" parent="StatLayout" unique_id=1702287629]
-layout_mode = 2
-
-[node name="Health" type="Label" parent="StatLayout" unique_id=1028591691]
-layout_mode = 2
-
-[node name="Attack" type="Label" parent="StatLayout" unique_id=485440742]
-layout_mode = 2
-
-[node name="AbilityLabel" type="Label" parent="." unique_id=73802764]
-layout_mode = 2
-
-
-
-==================================================
-FILE: .\CardData.gd
-==================================================
-
-extends Resource
-class_name CardData
-
-@export var card_name: String
-@export var energy_cost: int
-@export var attack: int
-@export var health: int
-@export var ability_text: String
-@export var card_art: Texture2D
-
-
-
-==================================================
-FILE: .\card_base.gd
+FILE: ./card_base.gd
 ==================================================
 
 extends PanelContainer
@@ -107,14 +48,14 @@ func setup_card(card_data: CardData):
 	$CardArt.texture = data.card_art
 
 # Update this part in card_base.gd
-func _input(event):
+# Replace your old _input(event) with this:
+func _gui_input(event):
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
-			# Use get_rect() to check if the click is anywhere inside the card
-			if get_rect().has_point(get_global_mouse_position()):
-				dragging = true
-				original_position = global_position
-				z_index = 10 
+			# Godot already knows the mouse is over the card here!
+			dragging = true
+			original_position = global_position
+			z_index = 10 
 		elif dragging:
 			dragging = false
 			z_index = 0
@@ -132,6 +73,11 @@ func check_drop():
 	parameters.collide_with_areas = true # Detect the DropZone Area2D
 	
 	var results = space_state.intersect_point(parameters)
+	# If no valid lane or not enough energy, snap back 
+	dragging = false
+	# Instead of setting global_position, we just let the ffff00
+	# HBoxContainer reposition it naturally.ffffff
+	position = Vector2.ZERO
 	
 	for result in results:
 		var lane = result.collider.get_parent() # Area2D is a child of Lane
@@ -152,7 +98,7 @@ func check_drop():
 
 
 ==================================================
-FILE: .\DeckManager.gd
+FILE: ./DeckManager.gd
 ==================================================
 
 extends Node
@@ -203,7 +149,7 @@ func discard_card(card_data: CardData):
 
 
 ==================================================
-FILE: .\GameManager.gd
+FILE: ./GameManager.gd
 ==================================================
 
 extends Node2D
@@ -261,78 +207,51 @@ func start_player_turn():
 
 
 ==================================================
-FILE: .\Lane.gd
+FILE: ./card.tscn
 ==================================================
 
-extends PanelContainer
+[gd_scene format=3 uid="uid://ctwi2jy7qn00w"]
 
-var occupied_card = null
+[ext_resource type="Script" uid="uid://dip5ppkgtrp3t" path="res://card_base.gd" id="1_kikvd"]
 
-# Ensure this function is exactly as written here
-func is_empty() -> bool:
-	return occupied_card == null
-
-func receive_card(card_node):
-	if is_empty():
-		occupied_card = card_node
-		# Use the Marker2D you created in Lane.tscn 
-		card_node.global_position = $DropZone/CardPos.global_position
-		return true
-	return false
-# Add this to Lane.gd
-func get_card_attack() -> int:
-	if occupied_card and occupied_card.data:
-		return occupied_card.data.attack
-	return 0
-
-func take_damage(amount: int):
-	if occupied_card:
-		occupied_card.data.health -= amount
-		# Update the visual label on the card [cite: 5]
-		occupied_card.setup_card(occupied_card.data) 
-		
-		if occupied_card.data.health <= 0:
-			print("Card defeated!")
-			occupied_card.queue_free() # Remove from screen
-			occupied_card = null
-
-
-
-==================================================
-FILE: .\Lane.tscn
-==================================================
-
-[gd_scene format=3 uid="uid://eb0m58xq5pld"]
-
-[ext_resource type="Script" uid="uid://vsoj8x5p1siv" path="res://Lane.gd" id="1_ey8ml"]
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_ey8ml"]
-size = Vector2(40, 40)
-
-[node name="Lane" type="PanelContainer" unique_id=1356598570]
+[node name="Card" type="PanelContainer" unique_id=1339370288]
 custom_minimum_size = Vector2(200, 100)
-offset_right = 40.0
-offset_bottom = 40.0
-size_flags_vertical = 0
-script = ExtResource("1_ey8ml")
+offset_right = 23.0
+offset_bottom = 28.0
+size_flags_vertical = 4
+script = ExtResource("1_kikvd")
 
-[node name="DropZone" type="Area2D" parent="." unique_id=1523745668]
+[node name="Art" type="Sprite2D" parent="." unique_id=1816162589]
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="DropZone" unique_id=415735990]
-position = Vector2(20, 20)
-shape = SubResource("RectangleShape2D_ey8ml")
+[node name="Background" type="Panel" parent="." unique_id=865903103]
+layout_mode = 2
+mouse_filter = 2
 
-[node name="CardPos" type="Marker2D" parent="DropZone" unique_id=1179555400]
-position = Vector2(9, 7)
+[node name="CardArt" type="TextureRect" parent="." unique_id=1455535551]
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
 
-[node name="PlacementPos" type="Marker2D" parent="." unique_id=1429213406]
+[node name="StatLayout" type="VBoxContainer" parent="." unique_id=2090612591]
+layout_mode = 2
 
-[node name="VFXSpawner" type="Node2D" parent="." unique_id=1487478817]
+[node name="Energy Cost" type="Label" parent="StatLayout" unique_id=1702287629]
+layout_mode = 2
+
+[node name="Health" type="Label" parent="StatLayout" unique_id=1028591691]
+layout_mode = 2
+
+[node name="Attack" type="Label" parent="StatLayout" unique_id=485440742]
+layout_mode = 2
+
+[node name="AbilityLabel" type="Label" parent="." unique_id=73802764]
+layout_mode = 2
 
 
 
 ==================================================
-FILE: .\main.tscn
+FILE: ./main.tscn
 ==================================================
 
 [gd_scene format=3 uid="uid://dfp7koqrlomwa"]
@@ -391,8 +310,9 @@ offset_right = 8.0
 offset_bottom = 8.0
 
 [node name="PlayerHand" type="HBoxContainer" parent="UI" unique_id=154813626]
+offset_top = 550.0
 offset_right = 800.0
-offset_bottom = 1000.0
+offset_bottom = 700.0
 
 [node name="DeckManager" type="Node" parent="." unique_id=1990857804]
 script = ExtResource("3_vivmo")
@@ -400,5 +320,97 @@ card_scene = ExtResource("4_2cqfq")
 starter_deck = Array[ExtResource("5_lquwl")]([ExtResource("10_ryguw"), ExtResource("11_d13ii"), ExtResource("12_1u8w0"), ExtResource("13_0odxb"), ExtResource("14_lswn8"), ExtResource("15_a6jrf"), ExtResource("6_074og"), ExtResource("7_cegan"), ExtResource("8_82xsv"), ExtResource("9_getpj")])
 
 [connection signal="pressed" from="UI/EndTurnButton" to="." method="end_turn"]
+
+
+
+==================================================
+FILE: ./CardData.gd
+==================================================
+
+extends Resource
+class_name CardData
+
+@export var card_name: String
+@export var energy_cost: int
+@export var attack: int
+@export var health: int
+@export var ability_text: String
+@export var card_art: Texture2D
+
+
+
+==================================================
+FILE: ./Lane.tscn
+==================================================
+
+[gd_scene format=3 uid="uid://eb0m58xq5pld"]
+
+[ext_resource type="Script" uid="uid://vsoj8x5p1siv" path="res://Lane.gd" id="1_ey8ml"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ey8ml"]
+size = Vector2(200, 100)
+
+[node name="Lane" type="PanelContainer" unique_id=1356598570]
+custom_minimum_size = Vector2(200, 100)
+offset_right = 200.0
+offset_bottom = 100.0
+size_flags_vertical = 0
+script = ExtResource("1_ey8ml")
+
+[node name="DropZone" type="Area2D" parent="." unique_id=1523745668]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DropZone" unique_id=415735990]
+position = Vector2(100, 50)
+shape = SubResource("RectangleShape2D_ey8ml")
+
+[node name="CardPos" type="Marker2D" parent="DropZone" unique_id=1179555400]
+position = Vector2(9, 7)
+
+[node name="PlacementPos" type="Marker2D" parent="." unique_id=1429213406]
+
+[node name="VFXSpawner" type="Node2D" parent="." unique_id=1487478817]
+
+[node name="Highlight" type="ColorRect" parent="." unique_id=62457293]
+layout_mode = 2
+color = Color(1, 1, 0, 1)
+
+
+
+==================================================
+FILE: ./Lane.gd
+==================================================
+
+extends PanelContainer
+
+var occupied_card = null
+
+# Ensure this function is exactly as written here
+func is_empty() -> bool:
+	return occupied_card == null
+
+func receive_card(card_node):
+	if is_empty():
+		occupied_card = card_node
+		
+		# FIX: Move the card from the Hand to the Lane in the node tree
+		card_node.get_parent().remove_child(card_node)
+		add_child(card_node)
+		
+		# Now that it's a child of the Lane (a PanelContainer), 
+		# it will automatically center itself!
+		card_node.position = Vector2.ZERO 
+		return true
+	return false
+
+func take_damage(amount: int):
+	if occupied_card:
+		occupied_card.data.health -= amount
+		# Update the visual label on the card [cite: 5]
+		occupied_card.setup_card(occupied_card.data) 
+		
+		if occupied_card.data.health <= 0:
+			print("Card defeated!")
+			occupied_card.queue_free() # Remove from screen
+			occupied_card = null
 
 

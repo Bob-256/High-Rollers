@@ -1,7 +1,8 @@
-[gd_scene format=3 uid="uid://dfp7koqrlomwa"]
+[gd_scene load_steps=17 format=3 uid="uid://dfp7koqrlomwa"]
 
 [ext_resource type="Script" uid="uid://rjq4anmwluic" path="res://GameManager.gd" id="1_0xm2m"]
 [ext_resource type="PackedScene" uid="uid://eb0m58xq5pld" path="res://Lane.tscn" id="2_h2yge"]
+[ext_resource type="Script" uid="uid://b30uvw0cdytjf" path="res://HUDTheme.gd" id="3_2cqfq"]
 [ext_resource type="Script" uid="uid://c5sphsqjmsgpv" path="res://DeckManager.gd" id="3_vivmo"]
 [ext_resource type="PackedScene" uid="uid://ctwi2jy7qn00w" path="res://card.tscn" id="4_2cqfq"]
 [ext_resource type="Script" uid="uid://46n8evt5up56" path="res://CardData.gd" id="5_lquwl"]
@@ -16,49 +17,57 @@
 [ext_resource type="Resource" uid="uid://dk8vvl0nvdcck" path="res://Dealer3.tres" id="14_lswn8"]
 [ext_resource type="Resource" uid="uid://b77nyoao2c7nn" path="res://Dealer4.tres" id="15_a6jrf"]
 
-[node name="Main" type="Node2D" unique_id=1345614435]
+[node name="Main" type="Node2D"]
 script = ExtResource("1_0xm2m")
 
-[node name="Background" type="Sprite2D" parent="." unique_id=2074976595]
+[node name="Background" type="Sprite2D" parent="."]
 
-[node name="Board" type="HBoxContainer" parent="." unique_id=966255795]
+[node name="Board" type="HBoxContainer" parent="."]
 offset_left = 2.86
 offset_top = 300.0
 offset_right = 814.86
 offset_bottom = 400.0
 
-[node name="Lane1" parent="Board" unique_id=1356598570 instance=ExtResource("2_h2yge")]
+[node name="Lane1" parent="Board" instance=ExtResource("2_h2yge")]
 layout_mode = 2
 
-[node name="Lane2" parent="Board" unique_id=1334266369 instance=ExtResource("2_h2yge")]
+[node name="Lane2" parent="Board" instance=ExtResource("2_h2yge")]
 layout_mode = 2
 
-[node name="Lane3" parent="Board" unique_id=38981547 instance=ExtResource("2_h2yge")]
+[node name="Lane3" parent="Board" instance=ExtResource("2_h2yge")]
 layout_mode = 2
 
-[node name="Lane4" parent="Board" unique_id=1305176684 instance=ExtResource("2_h2yge")]
+[node name="Lane4" parent="Board" instance=ExtResource("2_h2yge")]
 layout_mode = 2
 
-[node name="UI" type="CanvasLayer" parent="." unique_id=90600976]
+[node name="UI" type="CanvasLayer" parent="."]
+script = ExtResource("3_2cqfq")
 
-[node name="ProgressBar" type="ProgressBar" parent="UI" unique_id=759979735]
-offset_right = 4.0
-offset_bottom = 27.0
+[node name="EnergyDisplay" type="Label" parent="UI"]
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 220.0
+offset_bottom = 40.0
 
-[node name="EnergyDisplay" type="Label" parent="UI" unique_id=478258773]
-offset_right = 40.0
-offset_bottom = 23.0
+[node name="ProgressBar" type="ProgressBar" parent="UI"]
+offset_left = 10.0
+offset_top = 48.0
+offset_right = 310.0
+offset_bottom = 72.0
+max_value = 10.0
 
-[node name="EndTurnButton" type="Button" parent="UI" unique_id=1050647512]
-offset_right = 8.0
-offset_bottom = 8.0
+[node name="EndTurnButton" type="Button" parent="UI"]
+offset_left = 10.0
+offset_top = 82.0
+offset_right = 160.0
+offset_bottom = 112.0
 
-[node name="PlayerHand" type="HBoxContainer" parent="UI" unique_id=154813626]
+[node name="PlayerHand" type="HBoxContainer" parent="UI"]
 offset_top = 550.0
 offset_right = 800.0
 offset_bottom = 700.0
 
-[node name="DeckManager" type="Node" parent="." unique_id=1990857804]
+[node name="DeckManager" type="Node" parent="."]
 script = ExtResource("3_vivmo")
 card_scene = ExtResource("4_2cqfq")
 starter_deck = Array[ExtResource("5_lquwl")]([ExtResource("10_ryguw"), ExtResource("11_d13ii"), ExtResource("12_1u8w0"), ExtResource("13_0odxb"), ExtResource("14_lswn8"), ExtResource("15_a6jrf"), ExtResource("6_074og"), ExtResource("7_cegan"), ExtResource("8_82xsv"), ExtResource("9_getpj")])

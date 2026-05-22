@@ -24,3 +24,7 @@ position = Vector2(9, 7)
 [node name="PlacementPos" type="Marker2D" parent="." unique_id=1429213406]
 
 [node name="VFXSpawner" type="Node2D" parent="." unique_id=1487478817]
+
+[node name="Highlight" type="ColorRect" parent="." unique_id=62457293]
+layout_mode = 2
+color = Color(1, 1, 0, 1)

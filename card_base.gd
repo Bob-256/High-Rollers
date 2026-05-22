@@ -70,8 +70,8 @@ func check_drop():
 	var results = space_state.intersect_point(parameters)
 	# If no valid lane or not enough energy, snap back 
 	dragging = false
-	# Instead of setting global_position, we just let the 
-	# HBoxContainer reposition it naturally.
+	# Instead of setting global_position, we just let the ffff00
+	# HBoxContainer reposition it naturally.ffffff
 	position = Vector2.ZERO
 	
 	for result in results:
