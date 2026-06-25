@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3 uid="uid://dfp7koqrlomwa"]
+[gd_scene load_steps=18 format=3 uid="uid://dfp7koqrlomwa"]
 
 [ext_resource type="Script" uid="uid://rjq4anmwluic" path="res://GameManager.gd" id="1_0xm2m"]
 [ext_resource type="PackedScene" uid="uid://eb0m58xq5pld" path="res://Lane.tscn" id="2_h2yge"]
@@ -16,6 +16,7 @@
 [ext_resource type="Resource" uid="uid://dom65fo5m7q2v" path="res://Dealer2.tres" id="13_0odxb"]
 [ext_resource type="Resource" uid="uid://dk8vvl0nvdcck" path="res://Dealer3.tres" id="14_lswn8"]
 [ext_resource type="Resource" uid="uid://b77nyoao2c7nn" path="res://Dealer4.tres" id="15_a6jrf"]
+[ext_resource type="Script" path="res://PlayerHand.gd" id="16_hand"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_0xm2m")
@@ -62,10 +63,20 @@ offset_top = 82.0
 offset_right = 160.0
 offset_bottom = 112.0
 
-[node name="PlayerHand" type="HBoxContainer" parent="UI"]
-offset_top = 550.0
-offset_right = 800.0
-offset_bottom = 700.0
+[node name="PlayerHand" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -400.0
+offset_top = -180.0
+offset_right = 400.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 0
+script = ExtResource("16_hand")
 
 [node name="DeckManager" type="Node" parent="."]
 script = ExtResource("3_vivmo")

@@ -3,9 +3,13 @@ extends PanelContainer
 @export var data: CardData
 var dragging = false
 var original_position: Vector2
-# Add these variables to the top of card_base.gd
 var hover_scale := Vector2(1.1, 1.1)
 var default_scale := Vector2(1.0, 1.0)
+
+var hand_position := Vector2.ZERO
+var hand_rotation := 0.0
+var in_hand := true
+var is_hovered := false
 
 func _ready():
 	# Connect the mouse signals to these functions
@@ -13,18 +17,42 @@ func _ready():
 	mouse_exited.connect(_on_mouse_exited)
 
 func _on_mouse_entered():
-	if not dragging:
-		# Create a smooth scaling animation
-		var tween = create_tween()
-		tween.tween_property(self, "scale", hover_scale, 0.1).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-		z_index = 5 # Ensure the hovered card is drawn on top of others
+	if not dragging and in_hand:
+		is_hovered = true
+		_update_layout()
 
 func _on_mouse_exited():
+	if not dragging and in_hand:
+		is_hovered = false
+		_update_layout()
+
+func set_hand_targets(pos: Vector2, rot: float):
+	hand_position = pos
+	hand_rotation = rot
+	in_hand = true
 	if not dragging:
-		# Smoothly return to original size
-		var tween = create_tween()
-		tween.tween_property(self, "scale", default_scale, 0.1).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-		z_index = 0 # Return to normal layer
+		_update_layout()
+
+func _update_layout():
+	if not in_hand or dragging:
+		return
+		
+	var target_pos = hand_position
+	var target_rot = hand_rotation
+	var target_scale = default_scale
+	var target_z = 0
+	
+	if is_hovered:
+		target_rot = 0.0
+		target_scale = hover_scale
+		target_pos.y -= 45.0
+		target_z = 5
+		
+	var tween = create_tween().set_parallel(true)
+	tween.tween_property(self, "position", target_pos, 0.15).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(self, "rotation", target_rot, 0.15).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(self, "scale", target_scale, 0.15).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	z_index = target_z
 
 # Connect these to the unique IDs in your Card.tscn 
 @onready var cost_label = $"StatLayout/Energy Cost"
@@ -43,14 +71,14 @@ func setup_card(card_data: CardData):
 	$CardArt.texture = data.card_art
 
 # Update this part in card_base.gd
-# Replace your old _input(event) with this:
 func _gui_input(event):
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
-			# Godot already knows the mouse is over the card here!
 			dragging = true
 			original_position = global_position
 			z_index = 10 
+			rotation = 0.0
+			scale = Vector2.ONE
 		elif dragging:
 			dragging = false
 			z_index = 0
@@ -58,7 +86,7 @@ func _gui_input(event):
 
 func _process(_delta):
 	if dragging:
-		global_position = get_global_mouse_position()
+		global_position = get_global_mouse_position() - size / 2.0
 
 func check_drop():
 	# Get the direct space state for 2D physics querying
@@ -68,11 +96,7 @@ func check_drop():
 	parameters.collide_with_areas = true # Detect the DropZone Area2D
 	
 	var results = space_state.intersect_point(parameters)
-	# If no valid lane or not enough energy, snap back 
 	dragging = false
-	# Instead of setting global_position, we just let the ffff00
-	# HBoxContainer reposition it naturally.ffffff
-	position = Vector2.ZERO
 	
 	for result in results:
 		var lane = result.collider.get_parent() # Area2D is a child of Lane
@@ -88,4 +112,8 @@ func check_drop():
 					return
 
 	# If no valid lane or not enough energy, snap back 
-	global_position = original_position
+	if in_hand:
+		_update_layout()
+	else:
+		global_position = original_position
+

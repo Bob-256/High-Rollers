@@ -8,6 +8,8 @@ extends CanvasLayer
 # ─────────────────────────────────────────
 
 func _ready():
+	# Set default clear color to match the casino felt green theme
+	RenderingServer.set_default_clear_color(Color(0.039, 0.102, 0.051))
 	_apply_hud_theme()
 
 
