@@ -7,11 +7,19 @@ extends CanvasLayer
 #  code — no theme editor required.
 # ─────────────────────────────────────────
 
+var player_hp_lbl: Label
+var opponent_hp_lbl: Label
+
 func _ready():
 	# Set default clear color to match the casino felt green theme
 	RenderingServer.set_default_clear_color(Color(0.039, 0.102, 0.051))
 	_apply_hud_theme()
 
+func update_hp_display(p_hp: int, o_hp: int):
+	if player_hp_lbl:
+		player_hp_lbl.text = "Player HP: " + str(p_hp)
+	if opponent_hp_lbl:
+		opponent_hp_lbl.text = "Opponent HP: " + str(o_hp)
 
 func _apply_hud_theme():
 	# ── Palette ──────────────────────────────────────────────────
@@ -61,22 +69,33 @@ func _apply_hud_theme():
 	energy_lbl.add_theme_color_override("font_color", col_gold)
 
 	# ── Score progress bar ────────────────────────────────────────
-	var bar: ProgressBar = $ProgressBar
-	bar.max_value = 10.0
-	bar.show_percentage = false   # hide the default "40%" text overlay
+	if has_node("ProgressBar"):
+		$ProgressBar.visible = false
 
-	var bar_bg := StyleBoxFlat.new()
-	bar_bg.bg_color = col_score_track
-	bar_bg.border_color = col_track_border
-	bar_bg.set_border_width_all(1)
-	bar_bg.set_corner_radius_all(3)
+	# ── HP displays ───────────────────────────────────────────────
+	player_hp_lbl = Label.new()
+	player_hp_lbl.name = "PlayerHP"
+	player_hp_lbl.text = "Player HP: 20"
+	player_hp_lbl.offset_left = 10.0
+	player_hp_lbl.offset_top = 45.0
+	player_hp_lbl.offset_right = 150.0
+	player_hp_lbl.offset_bottom = 75.0
+	player_hp_lbl.add_theme_font_override("font", serif)
+	player_hp_lbl.add_theme_font_size_override("font_size", 15)
+	player_hp_lbl.add_theme_color_override("font_color", col_gold)
+	add_child(player_hp_lbl)
 
-	var bar_fill := StyleBoxFlat.new()
-	bar_fill.bg_color = col_score_fill
-	bar_fill.set_corner_radius_all(2)
-
-	bar.add_theme_stylebox_override("background", bar_bg)
-	bar.add_theme_stylebox_override("fill", bar_fill)
+	opponent_hp_lbl = Label.new()
+	opponent_hp_lbl.name = "OpponentHP"
+	opponent_hp_lbl.text = "Opponent HP: 20"
+	opponent_hp_lbl.offset_left = 160.0
+	opponent_hp_lbl.offset_top = 45.0
+	opponent_hp_lbl.offset_right = 310.0
+	opponent_hp_lbl.offset_bottom = 75.0
+	opponent_hp_lbl.add_theme_font_override("font", serif)
+	opponent_hp_lbl.add_theme_font_size_override("font_size", 15)
+	opponent_hp_lbl.add_theme_color_override("font_color", col_score_fill) # dealer red
+	add_child(opponent_hp_lbl)
 
 	# ── End Turn button ───────────────────────────────────────────
 	var btn: Button = $EndTurnButton

@@ -62,6 +62,7 @@ func _update_layout():
 
 func setup_card(card_data: CardData):
 	data = card_data
+	data.init_stats()
 	cost_label.text = str(data.energy_cost)
 	attack_label.text = str(data.attack)
 	health_label.text = str(data.health)
@@ -72,6 +73,9 @@ func setup_card(card_data: CardData):
 
 # Update this part in card_base.gd
 func _gui_input(event):
+	if not in_hand:
+		return
+		
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
 			dragging = true

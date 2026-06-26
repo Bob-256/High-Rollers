@@ -15,7 +15,10 @@ func _ready():
 
 func prepare_deck():
 	draw_pile = starter_deck.duplicate()
-	draw_pile.shuffle() # Shuffling ensures low-randomness strategy starts fresh
+	for i in range(draw_pile.size()):
+		draw_pile[i] = draw_pile[i].duplicate()
+		draw_pile[i].init_stats()
+	draw_pile.shuffle()
 
 func draw_card(hand_container: Control):
 	if draw_pile.is_empty():
