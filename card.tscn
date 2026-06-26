@@ -1,37 +1,50 @@
-[gd_scene format=3 uid="uid://ctwi2jy7qn00w"]
+[gd_scene load_steps=2 format=3 uid="uid://ctwi2jy7qn00w"]
 
-[ext_resource type="Script" uid="uid://dip5ppkgtrp3t" path="res://card_base.gd" id="1_kikvd"]
+[ext_resource type="Script" path="res://card_base.gd" id="1_kikvd"]
 
-[node name="Card" type="PanelContainer" unique_id=1339370288]
+[node name="Card" type="PanelContainer"]
 custom_minimum_size = Vector2(200, 100)
-offset_right = 23.0
-offset_bottom = 28.0
+offset_right = 200.0
+offset_bottom = 100.0
 size_flags_vertical = 4
 script = ExtResource("1_kikvd")
 
-[node name="Art" type="Sprite2D" parent="." unique_id=1816162589]
-
-[node name="Background" type="Panel" parent="." unique_id=865903103]
+[node name="HBox" type="HBoxContainer" parent="."]
 layout_mode = 2
-mouse_filter = 2
+theme_override_constants/separation = 8
 
-[node name="CardArt" type="TextureRect" parent="." unique_id=1455535551]
+[node name="ArtContainer" type="AspectRatioContainer" parent="HBox"]
+custom_minimum_size = Vector2(65, 90)
 layout_mode = 2
-mouse_filter = 2
+stretch_mode = 3
+
+[node name="CardArt" type="TextureRect" parent="HBox/ArtContainer"]
+layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="StatLayout" type="VBoxContainer" parent="." unique_id=2090612591]
+[node name="ContentVBox" type="VBoxContainer" parent="HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="NameLabel" type="Label" parent="HBox/ContentVBox"]
 layout_mode = 2
 
-[node name="Energy Cost" type="Label" parent="StatLayout" unique_id=1702287629]
+[node name="AbilityLabel" type="Label" parent="HBox/ContentVBox"]
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="StatsHBox" type="HBoxContainer" parent="HBox/ContentVBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Energy Cost" type="Label" parent="HBox/ContentVBox/StatsHBox"]
 layout_mode = 2
 
-[node name="Health" type="Label" parent="StatLayout" unique_id=1028591691]
+[node name="Attack" type="Label" parent="HBox/ContentVBox/StatsHBox"]
 layout_mode = 2
 
-[node name="Attack" type="Label" parent="StatLayout" unique_id=485440742]
-layout_mode = 2
-
-[node name="AbilityLabel" type="Label" parent="." unique_id=73802764]
+[node name="Health" type="Label" parent="HBox/ContentVBox/StatsHBox"]
 layout_mode = 2

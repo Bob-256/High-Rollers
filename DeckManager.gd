@@ -1,47 +1,64 @@
 extends Node
 
-# Reference to the Card scene to instantiate visuals
 @export var card_scene: PackedScene
-# List of CardData resources (Dealer, Slot Guard, etc.)
 @export var starter_deck: Array[CardData] 
 
-var draw_pile: Array[CardData] = []
-var discard_pile: Array[CardData] = []
-var hand: Array[CardData] = []
+var communal_deck: Array[CardData] = []
+var hand: Array[CardData] = [] # Player hand
 
 func _ready():
-	# Initialize the game with the 10-card starter deck
-	prepare_deck()
+	prepare_communal_deck()
 
-func prepare_deck():
-	draw_pile = starter_deck.duplicate()
-	for i in range(draw_pile.size()):
-		draw_pile[i] = draw_pile[i].duplicate()
-		draw_pile[i].init_stats()
-	draw_pile.shuffle()
+func prepare_communal_deck():
+	communal_deck.clear()
+	
+	var archetypes = [
+		{"name": "Slot Guard", "cost": 2, "attack": 1, "health": 5, "ability": "Defender (Armor 1)", "template_idx": 0},
+		{"name": "Card Shark", "cost": 3, "attack": 4, "health": 2, "ability": "Glass Cannon", "template_idx": 1},
+		{"name": "Dealer", "cost": 1, "attack": 1, "health": 3, "ability": "On Play: Draw 1 card", "template_idx": 2},
+		{"name": "Bouncer", "cost": 3, "attack": 2, "health": 5, "ability": "On Play: Deal 2 damage to blocker", "template_idx": 0},
+		{"name": "High Roller", "cost": 4, "attack": 2, "health": 6, "ability": "Gains +1 Atk at end of turn", "template_idx": 2},
+		{"name": "Pit Boss", "cost": 5, "attack": 3, "health": 7, "ability": "On Play: Friendly cards +1/+1", "template_idx": 0},
+		{"name": "Jackpot King", "cost": 6, "attack": 7, "health": 7, "ability": "Jackpot (+2 direct damage)", "template_idx": 1}
+	]
+	
+	var distribution = [10, 10, 10, 8, 6, 4, 2]
+	
+	for arch_idx in range(archetypes.size()):
+		var arch = archetypes[arch_idx]
+		var count = distribution[arch_idx]
+		var template = starter_deck[min(arch.template_idx, starter_deck.size() - 1)]
+		
+		for c in range(count):
+			var new_card = template.duplicate()
+			new_card.card_name = arch.name
+			new_card.energy_cost = arch.cost
+			new_card.attack = arch.attack
+			new_card.health = arch.health
+			new_card.ability_text = arch.ability
+			communal_deck.append(new_card)
+			
+	communal_deck.shuffle()
+	print("Prepared communal deck of ", communal_deck.size(), " cards!")
 
-func draw_card(hand_container: Control):
-	if draw_pile.is_empty():
-		if discard_pile.is_empty():
-			print("No cards left to draw!")
-			return
-		reshuffle_discard_into_draw()
-
-	var card_data = draw_pile.pop_front()
+func draw_card(hand_container: Control) -> CardData:
+	if communal_deck.is_empty():
+		prepare_communal_deck()
+		
+	var card_data = communal_deck.pop_front()
 	hand.append(card_data)
 	
-	# Instantiate the visual card in the PlayerHand UI
 	var new_card = card_scene.instantiate()
 	hand_container.add_child(new_card)
-	new_card.setup_card(card_data) # Pass the Energy, Atk, and HP stats
+	new_card.setup_card(card_data)
 	
-	print("Drew: ", card_data.card_name)
+	print("Player Drew: ", card_data.card_name)
+	return card_data
 
-func reshuffle_discard_into_draw():
-	draw_pile = discard_pile.duplicate()
-	discard_pile.clear()
-	draw_pile.shuffle()
-
-func discard_card(card_data: CardData):
-	hand.erase(card_data)
-	discard_pile.append(card_data)
+func draw_card_for_opponent() -> CardData:
+	if communal_deck.is_empty():
+		prepare_communal_deck()
+		
+	var card_data = communal_deck.pop_front()
+	print("Opponent Drew: ", card_data.card_name)
+	return card_data
