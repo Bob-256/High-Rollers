@@ -90,12 +90,8 @@ func _apply_fonts_and_styles():
 func _on_stat_overlay_draw():
 	if data == null:
 		return
-		
-	# Dark transparent overlay container at the bottom
-	$StatOverlay.draw_rect(Rect2(0, 145, 140, 45), Color(0.08, 0.08, 0.08, 0.8))
-	$StatOverlay.draw_line(Vector2(0, 145), Vector2(140, 145), Color(0.25, 0.25, 0.25, 0.8), 1.0)
 	
-	var start_x = 12
+	var start_x = 10
 	var line_len = 8
 	var spacing = 3
 	
@@ -110,21 +106,21 @@ func _on_stat_overlay_draw():
 	var green_core = Color(0.70, 1.00, 0.80)
 	
 	# Draw Energy (Blue) - Row 1
-	var y_energy = 153
+	var y_energy = 12
 	for i in range(max(0, data.energy_cost)):
 		var x = start_x + i * (line_len + spacing)
 		$StatOverlay.draw_line(Vector2(x, y_energy), Vector2(x + line_len, y_energy), blue_glow, 5.0)
 		$StatOverlay.draw_line(Vector2(x, y_energy), Vector2(x + line_len, y_energy), blue_core, 2.0)
 		
 	# Draw Attack (Red) - Row 2
-	var y_attack = 167
+	var y_attack = 22
 	for i in range(max(0, data.attack)):
 		var x = start_x + i * (line_len + spacing)
 		$StatOverlay.draw_line(Vector2(x, y_attack), Vector2(x + line_len, y_attack), red_glow, 5.0)
 		$StatOverlay.draw_line(Vector2(x, y_attack), Vector2(x + line_len, y_attack), red_core, 2.0)
 		
 	# Draw Health (Green) - Row 3
-	var y_health = 181
+	var y_health = 32
 	for i in range(max(0, data.health)):
 		var x = start_x + i * (line_len + spacing)
 		$StatOverlay.draw_line(Vector2(x, y_health), Vector2(x + line_len, y_health), green_glow, 5.0)
