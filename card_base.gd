@@ -15,6 +15,7 @@ func _ready():
 	# Connect the mouse signals to these functions
 	mouse_entered.connect(_on_mouse_entered)
 	mouse_exited.connect(_on_mouse_exited)
+	$StatOverlay.draw.connect(_on_stat_overlay_draw)
 
 func _on_mouse_entered():
 	if not dragging and in_hand:
@@ -66,7 +67,7 @@ func setup_card(card_data: CardData):
 		data.ability_text
 	
 	_apply_fonts_and_styles()
-	queue_redraw()
+	$StatOverlay.queue_redraw()
 
 func _apply_fonts_and_styles():
 	var panel_box = StyleBoxFlat.new()
@@ -86,13 +87,13 @@ func _apply_fonts_and_styles():
 	panel_box.set_corner_radius_all(6)
 	add_theme_stylebox_override("panel", panel_box)
 
-func _draw():
+func _on_stat_overlay_draw():
 	if data == null:
 		return
 		
 	# Dark transparent overlay container at the bottom
-	draw_rect(Rect2(0, 145, 140, 45), Color(0.08, 0.08, 0.08, 0.8))
-	draw_line(Vector2(0, 145), Vector2(140, 145), Color(0.25, 0.25, 0.25, 0.8), 1.0)
+	$StatOverlay.draw_rect(Rect2(0, 145, 140, 45), Color(0.08, 0.08, 0.08, 0.8))
+	$StatOverlay.draw_line(Vector2(0, 145), Vector2(140, 145), Color(0.25, 0.25, 0.25, 0.8), 1.0)
 	
 	var start_x = 12
 	var line_len = 8
@@ -112,22 +113,22 @@ func _draw():
 	var y_energy = 153
 	for i in range(max(0, data.energy_cost)):
 		var x = start_x + i * (line_len + spacing)
-		draw_line(Vector2(x, y_energy), Vector2(x + line_len, y_energy), blue_glow, 5.0)
-		draw_line(Vector2(x, y_energy), Vector2(x + line_len, y_energy), blue_core, 2.0)
+		$StatOverlay.draw_line(Vector2(x, y_energy), Vector2(x + line_len, y_energy), blue_glow, 5.0)
+		$StatOverlay.draw_line(Vector2(x, y_energy), Vector2(x + line_len, y_energy), blue_core, 2.0)
 		
 	# Draw Attack (Red) - Row 2
 	var y_attack = 167
 	for i in range(max(0, data.attack)):
 		var x = start_x + i * (line_len + spacing)
-		draw_line(Vector2(x, y_attack), Vector2(x + line_len, y_attack), red_glow, 5.0)
-		draw_line(Vector2(x, y_attack), Vector2(x + line_len, y_attack), red_core, 2.0)
+		$StatOverlay.draw_line(Vector2(x, y_attack), Vector2(x + line_len, y_attack), red_glow, 5.0)
+		$StatOverlay.draw_line(Vector2(x, y_attack), Vector2(x + line_len, y_attack), red_core, 2.0)
 		
 	# Draw Health (Green) - Row 3
 	var y_health = 181
 	for i in range(max(0, data.health)):
 		var x = start_x + i * (line_len + spacing)
-		draw_line(Vector2(x, y_health), Vector2(x + line_len, y_health), green_glow, 5.0)
-		draw_line(Vector2(x, y_health), Vector2(x + line_len, y_health), green_core, 2.0)
+		$StatOverlay.draw_line(Vector2(x, y_health), Vector2(x + line_len, y_health), green_glow, 5.0)
+		$StatOverlay.draw_line(Vector2(x, y_health), Vector2(x + line_len, y_health), green_core, 2.0)
 
 # Update this part in card_base.gd
 func _gui_input(event):

@@ -13,3 +13,7 @@ script = ExtResource("1_kikvd")
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 6
+
+[node name="StatOverlay" type="Control" parent="."]
+layout_mode = 2
+mouse_filter = 2
