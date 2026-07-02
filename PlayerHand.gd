@@ -1,6 +1,6 @@
 extends Control
 
-@export var card_spacing: float = 110.0
+@export var card_spacing: float = 80.0
 @export var max_arc_height: float = 35.0
 @export var max_rotation_degrees: float = 12.0
 @export var base_y: float = 55.0
@@ -24,14 +24,14 @@ func arrange_cards():
 	
 	for i in range(n):
 		var card = cards[i]
-		# Ensure the card's pivot is at its center (200x100 cards) for correct rotation
-		card.pivot_offset = Vector2(100, 50)
+		# Ensure the card's pivot is at its center (140x190 cards) for correct rotation
+		card.pivot_offset = Vector2(70, 95)
 		
 		var t = 0.0
 		if n > 1:
 			t = -1.0 + (2.0 * i) / (n - 1)
 			
-		var target_x = center_x + t * ((n - 1) * card_spacing) / 2.0 - 100.0
+		var target_x = center_x + t * ((n - 1) * card_spacing) / 2.0 - 70.0
 		var target_y = base_y - (1.0 - t * t) * max_arc_height
 		var target_rot = deg_to_rad(t * max_rotation_degrees)
 		

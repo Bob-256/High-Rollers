@@ -78,7 +78,7 @@ func receive_opponent_card(card_node) -> bool:
 		card_node.rotation = 0.0
 		card_node.scale = Vector2.ONE
 		
-		var global_start_pos = Vector2(global_position.x + size.x / 2.0 - 100.0, -120.0)
+		var global_start_pos = Vector2(global_position.x + size.x / 2.0 - 70.0, -210.0)
 		if card_node.get_parent():
 			card_node.get_parent().remove_child(card_node)
 		$VBox/OpponentSlot.add_child(card_node)

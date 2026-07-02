@@ -3,12 +3,12 @@
 [ext_resource type="Script" path="res://Lane.gd" id="1_ey8ml"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ey8ml"]
-size = Vector2(200, 100)
+size = Vector2(140, 190)
 
 [node name="Lane" type="PanelContainer"]
-custom_minimum_size = Vector2(200, 243)
-offset_right = 200.0
-offset_bottom = 243.0
+custom_minimum_size = Vector2(140, 423)
+offset_right = 140.0
+offset_bottom = 423.0
 script = ExtResource("1_ey8ml")
 
 [node name="VBox" type="VBoxContainer" parent="."]
@@ -16,7 +16,7 @@ layout_mode = 2
 theme_override_constants/separation = 10
 
 [node name="OpponentSlot" type="PanelContainer" parent="VBox"]
-custom_minimum_size = Vector2(200, 100)
+custom_minimum_size = Vector2(140, 190)
 layout_mode = 2
 
 [node name="LaneLabel" type="Label" parent="VBox"]
@@ -25,14 +25,14 @@ text = "LANE"
 horizontal_alignment = 1
 
 [node name="PlayerSlot" type="PanelContainer" parent="VBox"]
-custom_minimum_size = Vector2(200, 100)
+custom_minimum_size = Vector2(140, 190)
 layout_mode = 2
 
 [node name="DropZone" type="Area2D" parent="."]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DropZone"]
-position = Vector2(100, 193)
+position = Vector2(70, 328)
 shape = SubResource("RectangleShape2D_ey8ml")
 
 [node name="VFXSpawner" type="Node2D" parent="."]
-position = Vector2(100, 120)
+position = Vector2(70, 211)

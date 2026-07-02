@@ -54,71 +54,80 @@ func _update_layout():
 	tween.tween_property(self, "scale", target_scale, 0.15).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	z_index = target_z
 
-var name_label: Label
-var cost_label: Label
-var health_label: Label
-var attack_label: Label
-var ability_label: Label
-
 func setup_card(card_data: CardData):
 	data = card_data
+	pivot_offset = Vector2(70, 95)
 	
-	name_label = get_node("HBox/ContentVBox/NameLabel")
-	cost_label = get_node("HBox/ContentVBox/StatsHBox/Energy Cost")
-	health_label = get_node("HBox/ContentVBox/StatsHBox/Health")
-	attack_label = get_node("HBox/ContentVBox/StatsHBox/Attack")
-	ability_label = get_node("HBox/ContentVBox/AbilityLabel")
+	get_node("CardArt").texture = data.card_art
 	
-	name_label.text = data.card_name
-	cost_label.text = "E: " + str(data.energy_cost)
-	attack_label.text = "A: " + str(data.attack)
-	health_label.text = "H: " + str(data.health)
-	ability_label.text = data.ability_text
-	get_node("HBox/ArtContainer/CardArt").texture = data.card_art
+	# Rich detailed tooltip on hover
+	tooltip_text = data.card_name + "\n" + \
+		"Energy: " + str(data.energy_cost) + " | Attack: " + str(data.attack) + " | Health: " + str(data.health) + "\n\n" + \
+		data.ability_text
 	
 	_apply_fonts_and_styles()
+	queue_redraw()
 
 func _apply_fonts_and_styles():
-	var serif := SystemFont.new()
-	serif.font_names = PackedStringArray(["Georgia", "Times New Roman"])
-	serif.font_weight = 700
-	
-	name_label.add_theme_font_override("font", serif)
-	name_label.add_theme_font_size_override("font_size", 12)
-	name_label.add_theme_color_override("font_color", Color(1, 1, 1))
-	
-	ability_label.add_theme_font_size_override("font_size", 9)
-	ability_label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))
-	ability_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	
-	cost_label.add_theme_font_override("font", serif)
-	cost_label.add_theme_font_size_override("font_size", 10)
-	cost_label.add_theme_color_override("font_color", Color(0.831, 0.659, 0.165)) # casino gold
-	
-	attack_label.add_theme_font_override("font", serif)
-	attack_label.add_theme_font_size_override("font_size", 10)
-	attack_label.add_theme_color_override("font_color", Color(0.753, 0.224, 0.169)) # dealer red
-	
-	health_label.add_theme_font_override("font", serif)
-	health_label.add_theme_font_size_override("font_size", 10)
-	health_label.add_theme_color_override("font_color", Color(0.165, 0.659, 0.29)) # green
-	
 	var panel_box = StyleBoxFlat.new()
 	panel_box.bg_color = Color(0.08, 0.08, 0.08, 0.95)
 	panel_box.set_border_width_all(1)
 	
 	var name_lower = data.card_name.to_lower()
 	if "jackpot" in name_lower:
-		panel_box.border_color = Color(0.831, 0.659, 0.165)
+		panel_box.border_color = Color(0.831, 0.659, 0.165) # gold
 		panel_box.set_border_width_all(2)
 	elif "pit boss" in name_lower or "high roller" in name_lower:
-		panel_box.border_color = Color(0.7, 0.7, 0.75)
+		panel_box.border_color = Color(0.7, 0.7, 0.75) # silver
 		panel_box.set_border_width_all(2)
 	else:
 		panel_box.border_color = Color(0.25, 0.25, 0.25)
 		
 	panel_box.set_corner_radius_all(6)
 	add_theme_stylebox_override("panel", panel_box)
+
+func _draw():
+	if data == null:
+		return
+		
+	# Dark transparent overlay container at the bottom
+	draw_rect(Rect2(0, 145, 140, 45), Color(0.08, 0.08, 0.08, 0.8))
+	draw_line(Vector2(0, 145), Vector2(140, 145), Color(0.25, 0.25, 0.25, 0.8), 1.0)
+	
+	var start_x = 12
+	var line_len = 8
+	var spacing = 3
+	
+	# Neon stat colors
+	var blue_glow = Color(0.12, 0.53, 0.90, 0.35)
+	var blue_core = Color(0.60, 0.85, 1.00)
+	
+	var red_glow = Color(0.95, 0.20, 0.20, 0.35)
+	var red_core = Color(1.00, 0.70, 0.70)
+	
+	var green_glow = Color(0.20, 0.85, 0.30, 0.35)
+	var green_core = Color(0.70, 1.00, 0.80)
+	
+	# Draw Energy (Blue) - Row 1
+	var y_energy = 153
+	for i in range(max(0, data.energy_cost)):
+		var x = start_x + i * (line_len + spacing)
+		draw_line(Vector2(x, y_energy), Vector2(x + line_len, y_energy), blue_glow, 5.0)
+		draw_line(Vector2(x, y_energy), Vector2(x + line_len, y_energy), blue_core, 2.0)
+		
+	# Draw Attack (Red) - Row 2
+	var y_attack = 167
+	for i in range(max(0, data.attack)):
+		var x = start_x + i * (line_len + spacing)
+		draw_line(Vector2(x, y_attack), Vector2(x + line_len, y_attack), red_glow, 5.0)
+		draw_line(Vector2(x, y_attack), Vector2(x + line_len, y_attack), red_core, 2.0)
+		
+	# Draw Health (Green) - Row 3
+	var y_health = 181
+	for i in range(max(0, data.health)):
+		var x = start_x + i * (line_len + spacing)
+		draw_line(Vector2(x, y_health), Vector2(x + line_len, y_health), green_glow, 5.0)
+		draw_line(Vector2(x, y_health), Vector2(x + line_len, y_health), green_core, 2.0)
 
 # Update this part in card_base.gd
 func _gui_input(event):
