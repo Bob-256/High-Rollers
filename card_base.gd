@@ -243,4 +243,3 @@ func check_drop():
 		_update_layout()
 	else:
 		global_position = original_position
-
