@@ -11,11 +11,17 @@ var hand_rotation := 0.0
 var in_hand := true
 var is_hovered := false
 
+var label_font: Font
+
 func _ready():
 	# Connect the mouse signals to these functions
 	mouse_entered.connect(_on_mouse_entered)
 	mouse_exited.connect(_on_mouse_exited)
 	$StatOverlay.draw.connect(_on_stat_overlay_draw)
+	
+	label_font = SystemFont.new()
+	label_font.font_names = PackedStringArray(["Sans-Serif", "Arial", "Helvetica"])
+	label_font.font_weight = 700
 
 func _on_mouse_entered():
 	if not dragging and in_hand:
@@ -91,40 +97,74 @@ func _on_stat_overlay_draw():
 	if data == null:
 		return
 	
-	var start_x = 10
-	var line_len = 8
-	var spacing = 3
+	# Draw background badge pills for contrast
+	draw_stat_badge(Vector2(10, 10), data.energy_cost, "energy")
+	draw_stat_badge(Vector2(10, 28), data.attack, "attack")
+	draw_stat_badge(Vector2(10, 46), data.health, "health")
+
+func draw_stat_badge(pos: Vector2, value: int, type: String):
+	# Draw backing pill
+	var sb = StyleBoxFlat.new()
+	sb.bg_color = Color(0.05, 0.05, 0.05, 0.7)
+	sb.set_corner_radius_all(4)
+	$StatOverlay.draw_style_box(sb, Rect2(pos.x - 4, pos.y - 2, 44, 16))
 	
-	# Neon stat colors
-	var blue_glow = Color(0.12, 0.53, 0.90, 0.35)
-	var blue_core = Color(0.60, 0.85, 1.00)
+	# Core/glow colors
+	var glow_color: Color
+	var core_color: Color
 	
-	var red_glow = Color(0.95, 0.20, 0.20, 0.35)
-	var red_core = Color(1.00, 0.70, 0.70)
-	
-	var green_glow = Color(0.20, 0.85, 0.30, 0.35)
-	var green_core = Color(0.70, 1.00, 0.80)
-	
-	# Draw Energy (Blue) - Row 1
-	var y_energy = 12
-	for i in range(max(0, data.energy_cost)):
-		var x = start_x + i * (line_len + spacing)
-		$StatOverlay.draw_line(Vector2(x, y_energy), Vector2(x + line_len, y_energy), blue_glow, 5.0)
-		$StatOverlay.draw_line(Vector2(x, y_energy), Vector2(x + line_len, y_energy), blue_core, 2.0)
+	if type == "energy": # Lightning (Blue)
+		glow_color = Color(0.12, 0.53, 0.90, 0.4)
+		core_color = Color(0.60, 0.85, 1.00)
 		
-	# Draw Attack (Red) - Row 2
-	var y_attack = 22
-	for i in range(max(0, data.attack)):
-		var x = start_x + i * (line_len + spacing)
-		$StatOverlay.draw_line(Vector2(x, y_attack), Vector2(x + line_len, y_attack), red_glow, 5.0)
-		$StatOverlay.draw_line(Vector2(x, y_attack), Vector2(x + line_len, y_attack), red_core, 2.0)
+		# Draw Lightning Bolt
+		var points = PackedVector2Array([
+			Vector2(pos.x + 6, pos.y + 0),
+			Vector2(pos.x + 2, pos.y + 7),
+			Vector2(pos.x + 5, pos.y + 7),
+			Vector2(pos.x + 3, pos.y + 12),
+			Vector2(pos.x + 9, pos.y + 5),
+			Vector2(pos.x + 6, pos.y + 5),
+			Vector2(pos.x + 8, pos.y + 0),
+			Vector2(pos.x + 6, pos.y + 0)
+		])
+		$StatOverlay.draw_polyline(points, glow_color, 3.5, true)
+		$StatOverlay.draw_polyline(points, core_color, 1.5, true)
 		
-	# Draw Health (Green) - Row 3
-	var y_health = 32
-	for i in range(max(0, data.health)):
-		var x = start_x + i * (line_len + spacing)
-		$StatOverlay.draw_line(Vector2(x, y_health), Vector2(x + line_len, y_health), green_glow, 5.0)
-		$StatOverlay.draw_line(Vector2(x, y_health), Vector2(x + line_len, y_health), green_core, 2.0)
+	elif type == "attack": # Sword (Red)
+		glow_color = Color(0.95, 0.20, 0.20, 0.4)
+		core_color = Color(1.00, 0.70, 0.70)
+		
+		# Draw Sword
+		# Blade
+		$StatOverlay.draw_line(Vector2(pos.x + 5, pos.y + 0), Vector2(pos.x + 5, pos.y + 8), glow_color, 3.5)
+		$StatOverlay.draw_line(Vector2(pos.x + 5, pos.y + 0), Vector2(pos.x + 5, pos.y + 8), core_color, 1.5)
+		# Guard
+		$StatOverlay.draw_line(Vector2(pos.x + 2, pos.y + 8), Vector2(pos.x + 8, pos.y + 8), glow_color, 3.5)
+		$StatOverlay.draw_line(Vector2(pos.x + 2, pos.y + 8), Vector2(pos.x + 8, pos.y + 8), core_color, 1.5)
+		# Handle
+		$StatOverlay.draw_line(Vector2(pos.x + 5, pos.y + 8), Vector2(pos.x + 5, pos.y + 12), glow_color, 3.5)
+		$StatOverlay.draw_line(Vector2(pos.x + 5, pos.y + 8), Vector2(pos.x + 5, pos.y + 12), core_color, 1.5)
+		
+	else: # Health (Green)
+		glow_color = Color(0.20, 0.85, 0.30, 0.4)
+		core_color = Color(0.70, 1.00, 0.80)
+		
+		# Draw Heart
+		var points = PackedVector2Array([
+			Vector2(pos.x + 5, pos.y + 3),
+			Vector2(pos.x + 2.5, pos.y + 0.5),
+			Vector2(pos.x + 0, pos.y + 3),
+			Vector2(pos.x + 5, pos.y + 11),
+			Vector2(pos.x + 10, pos.y + 3),
+			Vector2(pos.x + 7.5, pos.y + 0.5),
+			Vector2(pos.x + 5, pos.y + 3)
+		])
+		$StatOverlay.draw_polyline(points, glow_color, 3.5, true)
+		$StatOverlay.draw_polyline(points, core_color, 1.5, true)
+
+	# Draw "xValue"
+	$StatOverlay.draw_string(label_font, Vector2(pos.x + 15, pos.y + 10), "x" + str(value), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.95, 0.95, 0.95))
 
 # Update this part in card_base.gd
 func _gui_input(event):
