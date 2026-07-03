@@ -3,7 +3,7 @@ extends PanelContainer
 @export var data: CardData
 var dragging = false
 var original_position: Vector2
-var hover_scale := Vector2(1.2, 1.2)
+var hover_scale := Vector2(2.0, 2.0)
 var default_scale := Vector2(1.0, 1.0)
 
 var hand_position := Vector2.ZERO
