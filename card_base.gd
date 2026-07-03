@@ -186,6 +186,33 @@ func _gui_input(event):
 func _process(_delta):
 	if dragging:
 		global_position = get_global_mouse_position() - size / 2.0
+		update_drag_hand_reorder()
+
+func update_drag_hand_reorder():
+	if not in_hand:
+		return
+	var hand_node = get_parent()
+	if not hand_node or hand_node.name != "PlayerHand":
+		return
+		
+	var mouse_pos = get_global_mouse_position()
+	# Only reorder if dragging near or inside the hand area vertically
+	if mouse_pos.y < 350.0:
+		return
+		
+	var cards = hand_node.get_children()
+	var current_idx = get_index()
+	
+	var target_idx = 0
+	for i in range(cards.size()):
+		if cards[i] == self:
+			continue
+		var card_center_x = cards[i].global_position.x + cards[i].size.x / 2.0
+		if mouse_pos.x > card_center_x:
+			target_idx += 1
+			
+	if target_idx != current_idx:
+		hand_node.move_child(self, target_idx)
 
 func check_drop():
 	dragging = false
