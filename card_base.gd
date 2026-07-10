@@ -10,6 +10,7 @@ var hand_position := Vector2.ZERO
 var hand_rotation := 0.0
 var in_hand := true
 var is_hovered := false
+var active_tooltip: CardTooltip = null
 
 var label_font: Font
 
@@ -24,14 +25,16 @@ func _ready():
 	label_font.font_weight = 700
 
 func _on_mouse_entered():
-	if not dragging and in_hand:
+	if not dragging:
 		is_hovered = true
-		_update_layout()
+		if in_hand:
+			_update_layout()
 
 func _on_mouse_exited():
-	if not dragging and in_hand:
+	if not dragging:
 		is_hovered = false
-		_update_layout()
+		if in_hand:
+			_update_layout()
 
 func set_hand_targets(pos: Vector2, rot: float):
 	hand_position = pos
@@ -67,13 +70,14 @@ func setup_card(card_data: CardData):
 	
 	get_node("CardArt").texture = data.card_art
 	
-	# Rich detailed tooltip on hover
-	tooltip_text = data.card_name + "\n" + \
-		"Energy: " + str(data.energy_cost) + " | Attack: " + str(data.attack) + " | Health: " + str(data.health) + "\n\n" + \
-		data.ability_text
+	# Clear static tooltip so we can use dynamic _get_tooltip()
+	tooltip_text = ""
 	
 	_apply_fonts_and_styles()
 	$StatOverlay.queue_redraw()
+
+func _get_tooltip(_at_position: Vector2) -> String:
+	return ""
 
 func _apply_fonts_and_styles():
 	var panel_box = StyleBoxFlat.new()
@@ -187,6 +191,8 @@ func _process(_delta):
 	if dragging:
 		global_position = get_global_mouse_position() - size / 2.0
 		update_drag_hand_reorder()
+	
+	_update_tooltip_state()
 
 func update_drag_hand_reorder():
 	if not in_hand:
@@ -233,7 +239,7 @@ func check_drop():
 						if main_node.has_method("animate_energy_change"):
 							main_node.animate_energy_change()
 						dragging = false
-						set_process(false)
+						# Keep process active for tooltip updates
 						return
 				else:
 					main_node.show_warning_message("Not enough energy! Needs " + str(data.energy_cost))
@@ -243,3 +249,145 @@ func check_drop():
 		_update_layout()
 	else:
 		global_position = original_position
+
+
+func _exit_tree():
+	_hide_tooltip()
+
+
+func _update_tooltip_state():
+	var should_show = false
+	if not dragging and is_hovered:
+		var mouse_pos = get_local_mouse_position()
+		if mouse_pos.x >= 0.0 and mouse_pos.x <= 60.0 and mouse_pos.y >= 0.0 and mouse_pos.y <= 70.0:
+			var is_any_card_dragging = false
+			var main_node = get_tree().root.get_node_or_null("Main")
+			if main_node:
+				var hand_node = main_node.get_node_or_null("UI/PlayerHand")
+				if hand_node:
+					for card in hand_node.get_children():
+						if card.get("dragging"):
+							is_any_card_dragging = true
+							break
+			if not is_any_card_dragging:
+				should_show = true
+				
+	if should_show:
+		if active_tooltip == null:
+			_show_tooltip()
+		else:
+			_position_tooltip()
+	else:
+		if active_tooltip != null:
+			_hide_tooltip()
+
+
+func _show_tooltip():
+	if data == null:
+		return
+		
+	active_tooltip = CardTooltip.new(data.card_name, data.energy_cost, data.attack, data.health, data.ability_text)
+	
+	var main_node = get_tree().root.get_node_or_null("Main")
+	if main_node and main_node.has_node("UI"):
+		main_node.get_node("UI").add_child(active_tooltip)
+	else:
+		get_tree().root.add_child(active_tooltip)
+		
+	_position_tooltip()
+
+
+func _position_tooltip():
+	if active_tooltip == null:
+		return
+		
+	active_tooltip.reset_size()
+	
+	var tooltip_w = active_tooltip.size.x
+	var tooltip_h = active_tooltip.size.y
+	
+	var card_global_pos = global_position
+	var card_w = size.x * scale.x
+	
+	# Position centered above the card, 12px gap
+	var tx = card_global_pos.x + (card_w - tooltip_w) / 2.0
+	var ty = card_global_pos.y - tooltip_h - 12.0
+	
+	var screen_w = get_viewport_rect().size.x
+	var screen_h = get_viewport_rect().size.y
+	
+	tx = clamp(tx, 10.0, screen_w - tooltip_w - 10.0)
+	ty = clamp(ty, 10.0, screen_h - tooltip_h - 10.0)
+	
+	active_tooltip.global_position = Vector2(tx, ty)
+
+
+func _hide_tooltip():
+	if active_tooltip != null:
+		active_tooltip.queue_free()
+		active_tooltip = null
+
+
+# ─────────────────────────────────────────
+#  CardTooltip Nested Class
+# ─────────────────────────────────────────
+class CardTooltip extends PanelContainer:
+	func _init(card_name: String, energy: int, attack: int, health: int, ability_text: String):
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+		
+		var sb = StyleBoxFlat.new()
+		sb.bg_color = Color(0.03, 0.08, 0.04, 0.95) # Dark casino felt
+		sb.border_color = Color(0.72, 0.57, 0.17) # Gold
+		sb.set_border_width_all(2)
+		sb.set_corner_radius_all(8)
+		sb.content_margin_left = 12
+		sb.content_margin_right = 12
+		sb.content_margin_top = 10
+		sb.content_margin_bottom = 10
+		add_theme_stylebox_override("panel", sb)
+		
+		var vbox = VBoxContainer.new()
+		vbox.add_theme_constant_override("separation", 4)
+		add_child(vbox)
+		
+		var font_serif = SystemFont.new()
+		font_serif.font_names = PackedStringArray(["Georgia", "Times New Roman"])
+		font_serif.font_weight = 700
+		
+		# Title (Gold, Serif)
+		var title_lbl = Label.new()
+		title_lbl.text = card_name
+		title_lbl.add_theme_font_override("font", font_serif)
+		title_lbl.add_theme_font_size_override("font_size", 13)
+		title_lbl.add_theme_color_override("font_color", Color(0.83, 0.66, 0.16))
+		vbox.add_child(title_lbl)
+		
+		# Stats (Beige, Serif)
+		var stats_lbl = Label.new()
+		stats_lbl.text = "Energy: %d | Atk: %d | HP: %d" % [energy, attack, health]
+		stats_lbl.add_theme_font_override("font", font_serif)
+		stats_lbl.add_theme_font_size_override("font_size", 10)
+		stats_lbl.add_theme_color_override("font_color", Color(0.91, 0.77, 0.42))
+		vbox.add_child(stats_lbl)
+		
+		# Divider
+		var divider = ColorRect.new()
+		divider.custom_minimum_size = Vector2(0, 1)
+		divider.color = Color(0.72, 0.57, 0.17, 0.3)
+		vbox.add_child(divider)
+		
+		# Ability (Italic Georgia, White)
+		if not ability_text.is_empty():
+			var ability_lbl = Label.new()
+			ability_lbl.text = ability_text
+			ability_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
+			ability_lbl.custom_minimum_size = Vector2(176, 0)
+			
+			var font_italic = SystemFont.new()
+			font_italic.font_names = PackedStringArray(["Georgia", "Times New Roman"])
+			font_italic.font_italic = true
+			
+			ability_lbl.add_theme_font_override("font", font_italic)
+			ability_lbl.add_theme_font_size_override("font_size", 10)
+			ability_lbl.add_theme_color_override("font_color", Color(0.95, 0.95, 0.95))
+			vbox.add_child(ability_lbl)
