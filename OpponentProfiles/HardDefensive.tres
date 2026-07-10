@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="OpponentProfile" format=3]
+
+[ext_resource type="Script" path="res://OpponentProfile.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+opponent_name = "Pit Boss Bot"
+difficulty = "HARD"
+play_style = "DEFENSIVE"
+weight_damage = 0.5
+weight_block = 2.0
+weight_kill_ally = 1.0
+weight_kill_enemy = 1.0
+weight_buff_allies = 0.8
+weight_hand_size = 0.4
+valuation_noise = 0.0

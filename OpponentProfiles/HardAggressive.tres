@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="OpponentProfile" format=3]
+
+[ext_resource type="Script" path="res://OpponentProfile.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+opponent_name = "High Roller Bot"
+difficulty = "HARD"
+play_style = "AGGRESSIVE"
+weight_damage = 2.0
+weight_block = 0.5
+weight_kill_ally = 0.3
+weight_kill_enemy = 1.2
+weight_buff_allies = 0.6
+weight_hand_size = 0.5
+valuation_noise = 0.0

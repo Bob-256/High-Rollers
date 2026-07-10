@@ -12,9 +12,29 @@ var opponent_hp: int = 20
 const MAX_ENERGY = 6
 
 var cards_played_this_turn: int = 0
+static var current_stage: int = 1
 
 func _ready():
 	opponent_manager.prepare_deck()
+	
+	# Load progression profiles
+	var profile_path = "res://OpponentProfiles/EasyRandom.tres"
+	if current_stage == 2:
+		profile_path = "res://OpponentProfiles/MediumBalanced.tres"
+	elif current_stage == 3:
+		profile_path = "res://OpponentProfiles/HardAggressive.tres"
+	elif current_stage >= 4:
+		profile_path = "res://OpponentProfiles/HardDefensive.tres"
+		
+	if ResourceLoader.exists(profile_path):
+		opponent_manager.profile = load(profile_path)
+		print("Stage ", current_stage, ": Opponent is ", opponent_manager.profile.opponent_name)
+	
+	# Update HUD with stage info
+	if $UI.has_method("update_stage_display"):
+		var opp_name = opponent_manager.profile.opponent_name if opponent_manager.profile else "Dealer"
+		$UI.update_stage_display(current_stage, opp_name)
+		
 	start_player_turn()
 
 func end_turn():
@@ -27,7 +47,7 @@ func end_turn():
 	
 	# 1. Opponent Turn (AI plays cards)
 	var lanes = $Board.get_children()
-	opponent_manager.execute_ai_turn(lanes, min(current_turn, MAX_ENERGY))
+	await opponent_manager.execute_ai_turn(lanes, min(current_turn, MAX_ENERGY))
 	
 	# Wait for card placements to settle
 	await get_tree().create_timer(0.6).timeout
@@ -110,8 +130,10 @@ func declare_game_over():
 		print("It's a draw!")
 	elif player_hp <= 0:
 		print("Opponent wins!")
+		current_stage = 1 # Reset to stage 1 on defeat
 	else:
 		print("Player wins!")
+		current_stage += 1 # Advance to next stage on victory
 		
 	await get_tree().create_timer(2.0).timeout
 	get_tree().reload_current_scene()
