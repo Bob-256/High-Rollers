@@ -8,6 +8,30 @@ var energy: int = 1
 
 @onready var deck_manager = $"../DeckManager"
 
+func _ready():
+	# Create visual hand container dynamically
+	var opp_hand = Control.new()
+	opp_hand.name = "OpponentHand"
+	opp_hand.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	opp_hand.layout_mode = 3
+	opp_hand.anchors_preset = 5 # Top Center
+	opp_hand.anchor_left = 0.5
+	opp_hand.anchor_right = 0.5
+	opp_hand.anchor_top = 0.0
+	opp_hand.anchor_bottom = 0.0
+	opp_hand.offset_left = -400.0
+	opp_hand.offset_top = -90.0
+	opp_hand.offset_right = 400.0
+	opp_hand.offset_bottom = 110.0
+	opp_hand.grow_horizontal = 2
+	opp_hand.grow_vertical = 1
+	
+	opp_hand.set_script(preload("res://OpponentHand.gd"))
+	
+	var ui = get_node("../UI")
+	if ui:
+		ui.add_child(opp_hand)
+
 func prepare_deck():
 	# Stub for GameManager compatibility
 	pass
@@ -16,6 +40,13 @@ func draw_card():
 	var card_data = deck_manager.draw_card_for_opponent()
 	if card_data:
 		hand.append(card_data)
+		
+		var opp_hand_node = get_node("../UI/OpponentHand")
+		if opp_hand_node:
+			var new_card = card_scene.instantiate()
+			new_card.face_down = true
+			opp_hand_node.add_child(new_card)
+			new_card.setup_card(card_data)
 
 # AI Turn Execution (yields between actions for premium visual pacing)
 func execute_ai_turn(lanes: Array, max_energy: int):
@@ -138,13 +169,27 @@ func execute_ai_turn(lanes: Array, max_energy: int):
 			energy -= selected_card.energy_cost
 			hand.erase(selected_card)
 			
-			# Visual card creation
-			var new_card = card_scene.instantiate()
-			new_card.in_hand = false
-			new_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			
-			new_card.setup_card(selected_card)
-			selected_lane.receive_opponent_card(new_card)
+			var visual_card = null
+			var opp_hand_node = get_node("../UI/OpponentHand")
+			if opp_hand_node:
+				for child in opp_hand_node.get_children():
+					if child.data == selected_card:
+						visual_card = child
+						break
+						
+			if visual_card:
+				# Flip card face-up with animation
+				visual_card.set_face_down(false, true)
+				# Wait 0.15s to switch parent and slide during the flip
+				await get_tree().create_timer(0.15).timeout
+				selected_lane.receive_opponent_card(visual_card)
+			else:
+				# Fallback
+				var new_card = card_scene.instantiate()
+				new_card.in_hand = false
+				new_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				new_card.setup_card(selected_card)
+				selected_lane.receive_opponent_card(new_card)
 			
 			played_any = true
 			

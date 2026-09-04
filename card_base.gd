@@ -12,6 +12,12 @@ var in_hand := true
 var is_hovered := false
 var active_tooltip: CardTooltip = null
 
+var face_down := false:
+	set(val):
+		face_down = val
+		if is_inside_tree():
+			_update_face_state()
+
 var label_font: Font
 
 func _ready():
@@ -68,19 +74,24 @@ func setup_card(card_data: CardData):
 	data = card_data
 	pivot_offset = Vector2(70, 95)
 	
-	get_node("CardArt").texture = data.card_art
+	_update_face_state()
 	
 	# Clear static tooltip so we can use dynamic _get_tooltip()
 	tooltip_text = ""
-	
-	_apply_fonts_and_styles()
-	$StatOverlay.queue_redraw()
 
 func _get_tooltip(_at_position: Vector2) -> String:
 	return ""
 
 func _apply_fonts_and_styles():
 	var panel_box = StyleBoxFlat.new()
+	if face_down:
+		panel_box.bg_color = Color(0, 0, 0, 0)
+		panel_box.border_color = Color(0.722, 0.569, 0.165, 0.3)
+		panel_box.set_border_width_all(1)
+		panel_box.set_corner_radius_all(6)
+		add_theme_stylebox_override("panel", panel_box)
+		return
+		
 	panel_box.bg_color = Color(0.08, 0.08, 0.08, 0.95)
 	panel_box.set_border_width_all(1)
 	
@@ -98,7 +109,7 @@ func _apply_fonts_and_styles():
 	add_theme_stylebox_override("panel", panel_box)
 
 func _on_stat_overlay_draw():
-	if data == null:
+	if data == null or face_down:
 		return
 	
 	# Draw background badge pills for contrast
@@ -257,7 +268,7 @@ func _exit_tree():
 
 func _update_tooltip_state():
 	var should_show = false
-	if not dragging and is_hovered:
+	if not dragging and is_hovered and not face_down:
 		var mouse_pos = get_local_mouse_position()
 		if mouse_pos.x >= 0.0 and mouse_pos.x <= 60.0 and mouse_pos.y >= 0.0 and mouse_pos.y <= 70.0:
 			var is_any_card_dragging = false
@@ -391,3 +402,30 @@ class CardTooltip extends PanelContainer:
 			ability_lbl.add_theme_font_size_override("font_size", 10)
 			ability_lbl.add_theme_color_override("font_color", Color(0.95, 0.95, 0.95))
 			vbox.add_child(ability_lbl)
+
+
+func _update_face_state():
+	if face_down:
+		get_node("CardArt").texture = load("res://Images/card_back.png")
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+	else:
+		get_node("CardArt").texture = data.card_art if data else null
+		mouse_filter = Control.MOUSE_FILTER_STOP
+	_apply_fonts_and_styles()
+	$StatOverlay.queue_redraw()
+
+func set_face_down(val: bool, animate: bool = false):
+	if face_down == val:
+		return
+		
+	if not animate or not is_inside_tree():
+		face_down = val
+		return
+		
+	# Card flip animation
+	var tween = create_tween()
+	tween.tween_property(self, "scale:x", 0.0, 0.15).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tween.tween_callback(func():
+		face_down = val
+	)
+	tween.tween_property(self, "scale:x", default_scale.x, 0.15).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
