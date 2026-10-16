@@ -18,7 +18,8 @@ var face_down := false:
 		if is_inside_tree():
 			_update_face_state()
 
-var label_font: Font
+var label_font: Font 
+@onready var play_sfx: AudioStreamPlayer = $PlaySFX
 
 func _ready():
 	# Connect the mouse signals to these functions
@@ -232,6 +233,7 @@ func update_drag_hand_reorder():
 		hand_node.move_child(self, target_idx)
 
 func check_drop():
+	
 	dragging = false
 	var mouse_pos = get_global_mouse_position()
 	
@@ -244,6 +246,7 @@ func check_drop():
 			if lane.has_method("receive_card") and lane.is_empty():
 				if main_node.player_energy >= data.energy_cost:
 					if lane.receive_card(self):
+						play_card() 
 						main_node.player_energy -= data.energy_cost
 						main_node.cards_played_this_turn += 1
 						main_node.update_ui()
@@ -261,6 +264,8 @@ func check_drop():
 	else:
 		global_position = original_position
 
+func play_card() -> void:
+	play_sfx.play()
 
 func _exit_tree():
 	_hide_tooltip()
