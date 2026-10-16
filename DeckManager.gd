@@ -11,7 +11,7 @@ func _ready():
 
 func prepare_communal_deck():
 	communal_deck.clear()
-	
+	#card types
 	var archetypes = [
 		{"name": "Slot Guard", "cost": 2, "attack": 1, "health": 5, "ability": "Defender (Armor 1)", "template_idx": 0},
 		{"name": "Card Shark", "cost": 3, "attack": 4, "health": 2, "ability": "Glass Cannon", "template_idx": 1},

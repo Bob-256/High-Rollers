@@ -294,3 +294,7 @@ func _on_energy_display_draw():
 		var glow_color_solid = Color(glow_color.r, glow_color.g, glow_color.b, 1.0)
 		energy_lbl.draw_string_outline(font_serif, Vector2(102, 22), value_str, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 16, 3, glow_color_solid)
 		energy_lbl.draw_string(font_serif, Vector2(102, 22), value_str, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 16, core_color)
+
+
+func _on_end_turn_button_pressed() -> void:
+	pass # Replace with function body.
