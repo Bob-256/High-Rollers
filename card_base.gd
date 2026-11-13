@@ -102,6 +102,12 @@ func _apply_fonts_and_styles():
 	elif "pit boss" in name_lower or "high roller" in name_lower:
 		panel_box.border_color = Color(0.7, 0.7, 0.75) # silver
 		panel_box.set_border_width_all(2)
+	elif "card shark" in name_lower:
+		panel_box.border_color = Color(0.85, 0.22, 0.22) # crimson red
+		panel_box.set_border_width_all(2)
+	elif "shark" in name_lower:
+		panel_box.border_color = Color(0.25, 0.65, 0.85) # ocean blue
+		panel_box.set_border_width_all(2)
 	else:
 		panel_box.border_color = Color(0.25, 0.25, 0.25)
 		

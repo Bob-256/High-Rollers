@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="CardData" format=3 uid="uid://cxsharkclassic1"]
+
+[ext_resource type="Script" uid="uid://46n8evt5up56" path="res://CardData.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://drycfygw75ta6" path="res://Images/Shark.bak.PNG" id="2_art"]
+
+[resource]
+script = ExtResource("1_script")
+card_name = "Shark"
+energy_cost = 2
+attack = 3
+health = 2
+ability_text = "Chain Smoker: On Play: Deal 1 damage to lane"
+card_art = ExtResource("2_art")
+metadata/_custom_type_script = "uid://dip5ppkgtrp3t"

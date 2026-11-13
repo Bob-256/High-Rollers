@@ -21,7 +21,13 @@ func init_stats():
 		energy_cost = 3
 		attack = 4
 		health = 2
-		ability_text = "Glass Cannon"
+		ability_text = "Glass Cannon (+2 direct damage)"
+	elif "shark" in path:
+		card_name = "Shark"
+		energy_cost = 2
+		attack = 3
+		health = 2
+		ability_text = "Chain Smoker: On Play: Deal 1 damage to lane"
 	elif "dealer" in path:
 		card_name = "Dealer"
 		energy_cost = 1

@@ -128,6 +128,25 @@ func trigger_on_play_ability(card_node, is_player: bool):
 				ally.data.health += 1
 				ally.setup_card(ally.data)
 
+	elif ability == "shark" or ("shark" in ability and not "card shark" in ability):
+		# Shark (Smoking Shark) - "Chain Smoker": On Play: Deal 1 damage to lane blocker, or 1 direct damage if open
+		var blocker = opponent_card if is_player else player_card
+		if blocker:
+			blocker.data.health -= 1
+			blocker.setup_card(blocker.data)
+			if blocker.data.health <= 0:
+				blocker.queue_free()
+				if is_player:
+					opponent_card = null
+				else:
+					player_card = null
+		else:
+			if is_player:
+				gm.opponent_hp -= 1
+			else:
+				gm.player_hp -= 1
+			gm.update_ui()
+
 # Resolves combat in this lane.
 # Returns a Dictionary: {"player_direct": int, "opponent_direct": int}
 func resolve_lane_combat() -> Dictionary:
@@ -167,6 +186,12 @@ func resolve_lane_combat() -> Dictionary:
 		if "jackpot king" in opponent_card.data.card_name.to_lower():
 			result["player_direct"] += 2
 			
+		# Resolve Card Shark Glass Cannon bonus direct damage
+		if "card shark" in player_card.data.card_name.to_lower():
+			result["opponent_direct"] += 2
+		if "card shark" in opponent_card.data.card_name.to_lower():
+			result["player_direct"] += 2
+			
 		# Check defeats
 		if player_card.data.health <= 0:
 			player_card.queue_free()
@@ -191,6 +216,8 @@ func resolve_lane_combat() -> Dictionary:
 		var damage = player_card.data.attack
 		if "jackpot king" in player_card.data.card_name.to_lower():
 			damage += 2 # Extra direct damage for Jackpot King
+		if "card shark" in player_card.data.card_name.to_lower():
+			damage += 2 # Extra direct damage for Card Shark Glass Cannon
 		result["opponent_direct"] = damage
 		
 		var tween = create_tween()
@@ -207,6 +234,8 @@ func resolve_lane_combat() -> Dictionary:
 		var damage = opponent_card.data.attack
 		if "jackpot king" in opponent_card.data.card_name.to_lower():
 			damage += 2 # Extra direct damage for Jackpot King
+		if "card shark" in opponent_card.data.card_name.to_lower():
+			damage += 2 # Extra direct damage for Card Shark Glass Cannon
 		result["player_direct"] = damage
 		
 		var tween = create_tween()

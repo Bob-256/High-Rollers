@@ -230,6 +230,16 @@ func _evaluate_move(card_data: CardData, lane: Node, active_profile: Resource) -
 				if other_lane != lane and other_lane.opponent_card != null:
 					allies_count += 1
 		score += allies_count * active_profile.weight_buff_allies * 1.5
+
+	elif name_lower == "shark" or ("shark" in name_lower and not "card shark" in name_lower):
+		# Shark - Chain Smoker: 1 damage on play
+		if lane.player_card != null:
+			if lane.player_card.data.health <= 1:
+				score += active_profile.weight_kill_enemy * 2.0
+			else:
+				score += 1.0 * active_profile.weight_damage * 0.5
+		else:
+			score += 1.0 * active_profile.weight_damage
 		
 	# ─── 2. Evaluate Combat Resolution Simulation ───
 	if lane.player_card != null:
@@ -274,6 +284,12 @@ func _evaluate_move(card_data: CardData, lane: Node, active_profile: Resource) -
 			score += 2.0 * active_profile.weight_damage
 		if "jackpot king" in player_card.data.card_name.to_lower():
 			score -= 2.0 * active_profile.weight_damage * 0.5 # Penalty for receiving jackpot damage
+
+		# Evaluate Card Shark Glass Cannon direct damage
+		if "card shark" in name_lower:
+			score += 2.0 * active_profile.weight_damage
+		if "card shark" in player_card.data.card_name.to_lower():
+			score -= 2.0 * active_profile.weight_damage * 0.5
 			
 		# General block scoring (relieving player pressure in this lane)
 		score += p_atk * active_profile.weight_block * 0.8
@@ -285,6 +301,10 @@ func _evaluate_move(card_data: CardData, lane: Node, active_profile: Resource) -
 		
 		# Jackpot King bonus
 		if "jackpot king" in name_lower:
+			score += 2.0 * active_profile.weight_damage
+
+		# Card Shark Glass Cannon direct damage bonus
+		if "card shark" in name_lower:
 			score += 2.0 * active_profile.weight_damage
 			
 		# High Roller survives and grows
