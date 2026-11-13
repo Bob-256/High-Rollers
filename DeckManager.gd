@@ -16,7 +16,7 @@ var art_slot_guard = preload("res://Images/Slot_gaurd.PNG")
 
 func prepare_communal_deck():
 	communal_deck.clear()
-	
+	#card types
 	var archetypes = [
 		{"name": "Slot Guard", "cost": 2, "attack": 1, "health": 5, "ability": "Defender (Armor 1)", "art": art_slot_guard},
 		{"name": "Card Shark", "cost": 3, "attack": 4, "health": 2, "ability": "Glass Cannon (+2 direct damage)", "art": art_card_shark},
